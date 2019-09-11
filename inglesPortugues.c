@@ -22,6 +22,12 @@ int main (){
     char palavra[100];
     int i = 0, cont = 0;
 
+    arvore *raiz = NULL;
+
+    arvore *novo = (arvore *) malloc(sizeof(arvore));
+    novo->dir = NULL;
+    novo->esq = NULL;
+
     scanf("%s", linha);
     while (linha[i] != '\0'){
         if(linha[i] != ':'){
@@ -29,7 +35,8 @@ int main (){
             strcat(palavra, &a);
             cont++;
         } else {
-            printf("%s", palavra);
+            strcpy(novo->palavra, palavra);
+            addArv(&raiz, novo);
             cont = 0;
             i += 2; break;
         }
@@ -42,11 +49,13 @@ int main (){
             strcat(palavra, &a);
             cont++;
         } else {
-            printf("%s", palavra);
+            strcpy(novo->ingles, palavra);
             cont = 0;
         }
         i++;
     }
+
+    showArv(raiz);
 
     return 0;
 }
