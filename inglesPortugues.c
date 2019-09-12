@@ -4,58 +4,90 @@
 
 typedef struct arvore{
     char palavra[25];
-    char *ingles;
+    char ingles[500];
     struct arvore *dir;
     struct arvore *esq;
 } arvore;
 
+typedef struct unidade{
+    arvore *arvore;
+} unidade;
 
 void addArv(arvore **raiz, arvore *new);
 void showArv(arvore *raiz);
+void busca(arvore *no, char *string);
+void remover(arvore **raiz, char *string);
+arvore * maisEsq(arvore *raiz);
 arvore * freeArv(arvore *raiz);
-
-arvore * busca(arvore *no, int valor);
 
 int main (){
 
-    char linha[100];
+    char portugues[35];
+    char equivalente[500];
     char palavra[100];
-    int i = 0, cont = 0;
+    char palavraBuscar[50];
+    int i = 0, cont = 1, enter = 1;
 
-    arvore *raiz = NULL;
+    unidade *unidades = malloc(sizeof(unidade));
 
-    arvore *novo = (arvore *) malloc(sizeof(arvore));
-    novo->dir = NULL;
-    novo->esq = NULL;
+    while(enter != 0){
 
-    scanf("%s", linha);
-    while (linha[i] != '\0'){
-        if(linha[i] != ':'){
-            char a = linha[i];
-            strcat(palavra, &a);
-            cont++;
-        } else {
-            strcpy(novo->palavra, palavra);
-            addArv(&raiz, novo);
-            cont = 0;
-            i += 2; break;
+        printf("1. Cadastrar Unidade.\n2. Remover Palavra.\n3. Mostrar Unidade.\n4. Buscar Palavra.\n0. Sair\n");
+        scanf("%d", &enter);
+        switch (enter){
+            case 1:
+                unidades = realloc(unidades, sizeof(unidade)*cont);
+                arvore *raiz = NULL;
+
+                unidades[cont-1].arvore = raiz;
+
+                printf("Cadastrar linha? 1/0\n");
+                scanf("%d", &enter);
+                while(enter != 0){
+                    arvore *novo = (arvore *) malloc(sizeof(arvore));
+                    novo->dir = NULL;
+                    novo->esq = NULL;
+
+                    scanf("%s %s", portugues, equivalente);
+                    portugues[strlen(portugues)-1] = '\0';
+
+                    strcpy(novo->palavra, portugues);
+                    strcpy(novo->ingles, equivalente);
+
+                    addArv(&unidades[cont-1].arvore, novo);
+
+                    printf("Cadastrar linha? 1/0\n");
+                    scanf("%d", &enter);
+                }
+                enter = 1; cont++;
+                break;
+            case 2:
+                printf("Palavra a ser escluida : ");
+                scanf("%s", palavraBuscar);
+                
+                printf("Qual unidade?\n");
+                scanf("%d", &enter);
+                remover(&unidades[enter].arvore, palavraBuscar);
+                enter = 1;
+                break;
+            case 3:
+                printf("Qual unidade?\n");
+                scanf("%d", &enter);
+                if(enter < cont) showArv(unidades[enter].arvore); 
+                else printf("Não existe essa unidade\n");
+                enter = 1;
+                break;
+            case 4:
+                printf("Palavra a ser buscada : ");
+                scanf("%s", palavraBuscar);
+                
+                printf("Qual unidade?\n");
+                scanf("%d", &enter);
+                busca(unidades[enter].arvore,palavraBuscar);
+                enter = 1;
+            default : break;
         }
-        i++;
     }
-
-    while(linha[i] != '\0'){
-        if(linha[i] != ','){
-            char a = linha[i];
-            strcat(palavra, &a);
-            cont++;
-        } else {
-            strcpy(novo->ingles, palavra);
-            cont = 0;
-        }
-        i++;
-    }
-
-    showArv(raiz);
 
     return 0;
 }
@@ -72,13 +104,72 @@ void addArv(arvore **raiz, arvore *new){
         else if(returnCMP > 0)
             addArv( &((*raiz)->dir) , new );
     }
-
 }
+
 void showArv(arvore *raiz){
     if(raiz!=NULL){
-        printf("{%s",raiz->palavra);
+        printf("{%s: %s",raiz->palavra, raiz->ingles);
         showArv(raiz->esq);
         showArv(raiz->dir);
         printf("}");
     }
+}
+
+void busca(arvore *no, char *string){
+    if(no != NULL){
+        int returnCMP = strcmp(string, no->palavra);
+        if(returnCMP != 0){
+            if(returnCMP < 0) busca(no->esq, string);
+            else busca(no->dir, string);
+        } else {
+            printf("%s: %s", no->palavra, no->ingles);
+        }
+    }
+}
+
+void remover(arvore **raiz, char *string){
+    if((*raiz) != NULL){
+        int returnCMP = strcmp(string, (*raiz)->palavra);
+        if(returnCMP != 0){
+            if(returnCMP < 0) busca((*raiz)->esq, string);
+            else busca((*raiz)->dir, string);
+        } else {
+            if((*raiz)->esq == NULL && (*raiz)->dir == NULL){
+                free((*raiz));
+                (*raiz) = NULL;
+            } else if((*raiz)->dir != NULL && (*raiz)->esq == NULL){
+                arvore *aux = (arvore *) malloc(sizeof(arvore));
+                aux = (*raiz)->dir;
+                strcpy((*raiz)->palavra, aux->palavra);
+                strcpy((*raiz)->ingles, aux->ingles); 
+                (*raiz)->dir = NULL;
+                free(aux);
+                aux = NULL;
+            } else if((*raiz)->esq != NULL && (*raiz)->dir == NULL){
+                arvore *aux = (arvore *) malloc(sizeof(arvore));
+                aux = (*raiz)->esq;
+                strcpy((*raiz)->palavra, aux->palavra);
+                strcpy((*raiz)->ingles, aux->ingles); 
+                (*raiz)->esq = NULL;
+                free(aux);
+                aux = NULL;
+            } else {
+                arvore *aux = (arvore *) malloc(sizeof(arvore));
+                aux = maisEsq((*raiz)->dir);
+                strcpy((*raiz)->palavra, aux->palavra);
+                strcpy((*raiz)->ingles, aux->ingles); 
+                remover(&(*raiz)->dir, aux->palavra);
+            }
+        }
+    }
+}
+
+arvore * maisEsq(arvore *raiz){
+    arvore *aux = (arvore *) malloc(sizeof(arvore));
+    if(raiz != NULL){
+        aux = maisEsq(raiz->esq);
+    } else {
+        aux = raiz;
+    }
+    return aux;
 }

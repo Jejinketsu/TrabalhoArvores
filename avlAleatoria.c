@@ -204,8 +204,6 @@ arvore * busca(arvore *no, int valor){
     return aux;
 }
 
-
-
 int max(int esq, int dir){
     int maxA;
 
