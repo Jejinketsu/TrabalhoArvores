@@ -129,43 +129,6 @@ void busca(arvore *no, char *string){
     }
 }
 
-void remover(arvore **raiz, char *string){
-    if((*raiz) != NULL){
-        int returnCMP = strcmp(string, (*raiz)->palavra);
-        if(returnCMP != 0){
-            if(returnCMP < 0) busca((*raiz)->esq, string);
-            else busca((*raiz)->dir, string);
-        } else {
-            if((*raiz)->esq == NULL && (*raiz)->dir == NULL){
-                free((*raiz));
-                (*raiz) = NULL;
-            } else if((*raiz)->dir != NULL && (*raiz)->esq == NULL){
-                arvore *aux = (arvore *) malloc(sizeof(arvore));
-                aux = (*raiz)->dir;
-                strcpy((*raiz)->palavra, aux->palavra);
-                strcpy((*raiz)->ingles, aux->ingles); 
-                (*raiz)->dir = NULL;
-                free(aux);
-                aux = NULL;
-            } else if((*raiz)->esq != NULL && (*raiz)->dir == NULL){
-                arvore *aux = (arvore *) malloc(sizeof(arvore));
-                aux = (*raiz)->esq;
-                strcpy((*raiz)->palavra, aux->palavra);
-                strcpy((*raiz)->ingles, aux->ingles); 
-                (*raiz)->esq = NULL;
-                free(aux);
-                aux = NULL;
-            } else {
-                arvore *aux = (arvore *) malloc(sizeof(arvore));
-                aux = maisEsq((*raiz)->dir);
-                strcpy((*raiz)->palavra, aux->palavra);
-                strcpy((*raiz)->ingles, aux->ingles); 
-                remover(&(*raiz)->dir, aux->palavra);
-            }
-        }
-    }
-}
-
 
 void deleteNode(arvore **raiz, char *string){
     if(*raiz != NULL){
