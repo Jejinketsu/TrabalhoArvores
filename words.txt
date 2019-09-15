@@ -1,0 +1,6 @@
+quebrar: break
+ovo: egg,ovum
+caneta: pen
+lapis: pencil
+rede: network
+bebida: drink,water,beer,wine

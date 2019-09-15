@@ -11,6 +11,7 @@ typedef struct arvore{
 
 typedef struct unidade{
     arvore *arvore;
+    char fileName[100];
 } unidade;
 
 void addArv(arvore **raiz, arvore *new);
@@ -40,27 +41,32 @@ int main (){
                 unidades = realloc(unidades, sizeof(unidade)*cont);
                 arvore *raiz = NULL;
 
-                unidades[cont-1].arvore = raiz;
+                FILE *file;
+                char wordPTBR[50];
+                char wordsENG[200];
 
-                printf("Cadastrar linha? 1/0\n");
-                scanf("%d", &enter);
-                while(enter != 0){
+                unidades[cont-1].arvore = raiz;
+                printf("Arquivo com as palavras\n");
+                scanf("%s",unidades[cont-1].fileName);
+                file = fopen(unidades[cont-1].fileName , "r");
+
+                while( (fscanf(file , "%s%s\n", wordPTBR,wordsENG))!=EOF ){
+
                     arvore *novo = (arvore *) malloc(sizeof(arvore));
                     novo->dir = NULL;
                     novo->esq = NULL;
-
-                    scanf("%s %s", portugues, equivalente);
-                    portugues[strlen(portugues)] = '\0';
-
-                    strcpy(novo->palavra, portugues);
-                    strcpy(novo->ingles, equivalente);
-
+                    
+                    int size = strlen(wordPTBR);
+                    wordPTBR[size-1] = '\0';
+                    
+                    strcpy(novo->palavra , wordPTBR);
+                    strcpy(novo->ingles , wordsENG);
                     addArv(&unidades[cont-1].arvore, novo);
-
-                    printf("Cadastrar linha? 1/0\n");
-                    scanf("%d", &enter);
+                    
                 }
-                enter = 1; cont++;
+
+                enter = 1; 
+                cont++;
                 break;
             case 2:
                 printf("Palavra a ser escluida : ");
