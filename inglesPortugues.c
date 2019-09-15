@@ -17,6 +17,7 @@ void addArv(arvore **raiz, arvore *new);
 void showArv(arvore *raiz);
 void busca(arvore *no, char *string);
 void remover(arvore **raiz, char *string);
+void deleteNode(arvore **raiz, char *string);
 arvore * maisEsq(arvore *raiz);
 arvore * freeArv(arvore *raiz);
 
@@ -49,7 +50,7 @@ int main (){
                     novo->esq = NULL;
 
                     scanf("%s %s", portugues, equivalente);
-                    portugues[strlen(portugues)-1] = '\0';
+                    portugues[strlen(portugues)] = '\0';
 
                     strcpy(novo->palavra, portugues);
                     strcpy(novo->ingles, equivalente);
@@ -67,7 +68,8 @@ int main (){
                 
                 printf("Qual unidade?\n");
                 scanf("%d", &enter);
-                remover(&unidades[enter].arvore, palavraBuscar);
+                // remover(&unidades[enter].arvore, palavraBuscar);
+                deleteNode(&unidades[enter].arvore, palavraBuscar);
                 enter = 1;
                 break;
             case 3:
@@ -163,6 +165,50 @@ void remover(arvore **raiz, char *string){
         }
     }
 }
+
+
+void deleteNode(arvore **raiz, char *string){
+    if(*raiz != NULL){
+    
+        int returnCMP = strcmp(string, (*raiz)->palavra);
+        
+        if(returnCMP < 0)
+            deleteNode((&(*raiz)->esq), string);
+        else if(returnCMP > 0)
+            deleteNode((&(*raiz)->dir), string);
+        else{
+            // Verifico se o no é uma folha
+            if((*raiz)->esq == NULL && (*raiz)->dir == NULL ){
+                free(*raiz);
+                *raiz = NULL;
+            }
+            else if((*raiz)->esq == NULL){
+                arvore *aux = *raiz;
+                *raiz = (*raiz)->dir;
+                free(aux);
+            }
+            else if((*raiz)->dir == NULL){
+                arvore *aux = *raiz;
+                *raiz = (*raiz)->esq;
+                free(aux);
+            }
+            else{
+                arvore *aux = (*raiz)->esq;
+                while (aux->dir != NULL) {
+                    aux = aux->dir;
+                }
+                strcpy((*raiz)->palavra, aux->palavra);
+                strcpy((*raiz)->ingles, aux->ingles); 
+                
+                strcpy(aux->palavra, string);
+                deleteNode((&(*raiz)->esq) , string);
+            }
+
+        }
+    }
+}
+
+
 
 arvore * maisEsq(arvore *raiz){
     arvore *aux = (arvore *) malloc(sizeof(arvore));
