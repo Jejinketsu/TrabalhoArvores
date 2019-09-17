@@ -74,7 +74,6 @@ int main (){
                 
                 printf("Qual unidade?\n");
                 scanf("%d", &enter);
-                // remover(&unidades[enter].arvore, palavraBuscar);
                 deleteNode(&unidades[enter].arvore, palavraBuscar);
                 enter = 1;
                 break;
