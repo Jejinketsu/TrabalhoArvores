@@ -4,7 +4,7 @@
 
 typedef struct arvore{
     char palavra[25];
-    char ingles[500];
+    struct text *listaENG;
     struct arvore *dir;
     struct arvore *esq;
 } arvore;
@@ -14,6 +14,14 @@ typedef struct unidade{
     char fileName[100];
 } unidade;
 
+typedef struct text{
+    char palavra[25];
+    struct text *prox;
+} text;
+
+text * addText(text *lista, char *new);
+text * contain(text *lista, char *new);
+void showList(text *lista);
 void addArv(arvore **raiz, arvore *new);
 void showArv(arvore *raiz);
 void busca(arvore *no, char *string);
@@ -42,14 +50,93 @@ int main (){
                 arvore *raiz = NULL;
 
                 FILE *file;
-                char wordPTBR[50];
-                char wordsENG[200];
+                char wordsFile[255];
+	
+                char wordENG[50];
+                char wordsPtbr[156];
+	            char *stringCat;
 
                 unidades[cont-1].arvore = raiz;
+                char *character = (char *) malloc(sizeof(char));
                 printf("Arquivo com as palavras\n");
                 scanf("%s",unidades[cont-1].fileName);
                 file = fopen(unidades[cont-1].fileName , "r");
 
+                while( (fscanf(file , "%s\n",wordsFile))!=EOF ){
+                    char *palavra_ingles = (char *) malloc(sizeof(char));
+                    char *palavra_portugues = (char *) malloc(sizeof(char));
+
+                    if(wordsFile[0]=='%'){
+                        int i;
+                        
+                        for(i=1; wordsFile[i]!='\0' ; i++)
+                            character[i-1] = wordsFile[i];
+                        
+                        character[i] = '\0';
+
+                        printf("%s\n",character);
+                    }
+                    else{
+                        for(int i = 0 ; i < strlen(wordsFile) ; i++){
+                            if(wordsFile[i]!=':'){
+                                palavra_ingles[i] = wordsFile[i];
+                            }
+                            else{
+                                // Pego a palvara em Ingles
+                                palavra_ingles[i] = '\0';
+                                
+
+                                // Percorro a lista de palavras em portugues, cada uma vai ser um nó
+                                int idxENG = 1 ; //Indice do vetor de palvras em ingles
+                                int size = strlen(wordsFile);
+                                
+                                int x = i+1;
+                                
+                                while(wordsFile[x]!='\0'){
+                                    palavra_portugues[idxENG-1] = wordsFile[x];
+
+                                    if(wordsFile[x]== ',' ){
+                                        palavra_portugues[idxENG-1] = '\0';
+                                        idxENG = 0;           
+                                        printf("%s\n",palavra_portugues);
+
+                                        arvore *novo = (arvore *) malloc(sizeof(arvore));
+                                        novo->dir = NULL;
+                                        novo->esq = NULL;
+                                        novo->listaENG = NULL;
+
+                                        strcpy(novo->palavra , palavra_portugues);
+                                        novo->listaENG = contain(novo->listaENG, palavra_ingles);
+
+                                        addArv(&unidades[cont-1].arvore, novo);
+
+                                    }
+
+                                    x++;
+                                    idxENG++;
+
+                                    if(wordsFile[x] =='\0'){
+                                        palavra_portugues[idxENG-1] ='\0';
+                                        printf("%s\n",palavra_portugues);
+                                        arvore *novo = (arvore *) malloc(sizeof(arvore));
+                                        novo->dir = NULL;
+                                        novo->esq = NULL;
+                                        novo->listaENG = NULL;
+
+                                        strcpy(novo->palavra , palavra_portugues);
+                                        novo->listaENG = contain(novo->listaENG, palavra_ingles);
+
+                                        addArv(&unidades[cont-1].arvore, novo);
+                                    }
+                                    
+                                    
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                /*
                 while( (fscanf(file , "%s%s\n", wordPTBR,wordsENG))!=EOF ){
 
                     arvore *novo = (arvore *) malloc(sizeof(arvore));
@@ -65,6 +152,7 @@ int main (){
                     
                 }
 
+                */
                 enter = 1; 
                 cont++;
                 break;
@@ -79,7 +167,7 @@ int main (){
                 break;
             case 3:
                 printf("Qual unidade?\n");
-                scanf("%d", &enter);
+                scanf("%d", &enter);/
                 if(enter < cont) showArv(unidades[enter].arvore); 
                 else printf("Não existe essa unidade\n");
                 enter = 1;
@@ -115,7 +203,8 @@ void addArv(arvore **raiz, arvore *new){
 
 void showArv(arvore *raiz){
     if(raiz!=NULL){
-        printf("{%s: %s",raiz->palavra, raiz->ingles);
+        printf("{%s: ",raiz->palavra);
+        showList(raiz->listaENG);
         showArv(raiz->esq);
         showArv(raiz->dir);
         printf("}");
@@ -129,7 +218,9 @@ void busca(arvore *no, char *string){
             if(returnCMP < 0) busca(no->esq, string);
             else busca(no->dir, string);
         } else {
-            printf("%s: %s", no->palavra, no->ingles);
+            printf("%s: ", no->palavra);
+            showList(no->listaENG);
+            printf("\n");
         }
     }
 }
@@ -166,7 +257,7 @@ void deleteNode(arvore **raiz, char *string){
                     aux = aux->dir;
                 }
                 strcpy((*raiz)->palavra, aux->palavra);
-                strcpy((*raiz)->ingles, aux->ingles); 
+                (*raiz)->listaENG = aux->listaENG; 
                 
                 strcpy(aux->palavra, string);
                 deleteNode((&(*raiz)->esq) , string);
@@ -176,8 +267,6 @@ void deleteNode(arvore **raiz, char *string){
     }
 }
 
-
-
 arvore * maisEsq(arvore *raiz){
     arvore *aux = (arvore *) malloc(sizeof(arvore));
     if(raiz != NULL){
@@ -186,4 +275,31 @@ arvore * maisEsq(arvore *raiz){
         aux = raiz;
     }
     return aux;
+}
+
+text * addText(text *lista, char *new){
+    text *novo = (text *) malloc(sizeof(text));
+    strcpy(novo->palavra, new);
+    novo->prox = NULL;
+    return novo;
+}
+
+text * contain(text *lista, char *new){
+    if(lista == NULL){ 
+        lista = addText(lista, new);
+    } else {
+        text *aux;
+        for(aux = lista; aux != NULL; aux = aux->prox){
+            if(strcmp(aux->palavra, new)) break;
+            if(aux->prox == NULL) break;
+        }
+        if(aux->prox == NULL) aux->prox = addText(lista, new);  
+    }
+    return lista;
+}
+
+void showList(text *lista){
+    text *aux;
+    for(aux = lista; aux != NULL; aux = aux->prox)
+        printf("%s ", aux->palavra);
 }
