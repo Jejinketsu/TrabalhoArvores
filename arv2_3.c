@@ -15,39 +15,97 @@ typedef struct arvore {
 
 int ehfolha(arvore *raiz);
 void showArv(arvore *raiz);
+arvore * busca(arvore *no, char *string);
 arvore * adicionaNo(arvore **raiz, char *string, arvore *paux);
 arvore * addArv(arvore **raiz, char *string, char *promove, arvore **pai);
 arvore * quebraNo(arvore **raiz, char *string, char *promove, arvore *subArvore);
-arvore ** criaNo(char *string, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir);
+arvore * criaNo(char *string, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir);
 
 int main(){
 
-    arvore **raiz = NULL;
-    char *promove;
-    
-    addArv(raiz, "E-", promove, NULL);
-    /*
-    addArv(raiz, "H-", promove, NULL);
-    addArv(raiz, "B-", promove, NULL);
-    addArv(raiz, "D-", promove, NULL);
-    addArv(raiz, "F-", promove, NULL);
-    addArv(raiz, "L-", promove, NULL);
-    addArv(raiz, "K-", promove, NULL);
-    addArv(raiz, "G-", promove, NULL);
-    addArv(raiz, "I-", promove, NULL);
-    addArv(raiz, "J-", promove, NULL);
-    addArv(raiz, "C-", promove, NULL);
-    addArv(raiz, "A-", promove, NULL);
-    */
+    arvore **raiz;
+    *raiz = NULL;
+    char *promove = malloc(sizeof(char)*25);
+
+    FILE *file;
+	char wordsFile[255];
+	char wordENG[50];
+	char wordsPtbr[156];
+	char *stringCat;
+	file = fopen("words.txt", "r");
+
+	char *unidade = (char *) malloc(sizeof(char));
+    addArv(raiz, "abcd", promove, NULL);
+    arvore **res;
+    *res = NULL;
+    //busca(*raiz,"abcd");
+
+  /*  while( (fscanf(file , "%s\n",wordsFile))!=EOF ){
+        char *palavra_ingles = (char *) malloc(sizeof(char));
+		char *palavra_portugues = (char *) malloc(sizeof(char));
+
+		if(wordsFile[0]=='%'){
+			int i;
+			
+			for(i=1; wordsFile[i]!='\0' ; i++)
+				unidade[i-1] = wordsFile[i];
+			
+			unidade[i] = '\0';
+
+			printf("%s\n",unidade);
+        }else{
+            int n = strlen(wordsFile);
+            for(int i = 0 ; i < n; i++){
+                if(wordsFile[i]!=':'){
+					palavra_ingles[i] = wordsFile[i];
+				} else {
+					// Pego a palvara em Ingles
+					palavra_ingles[i] = '\0';
+
+
+					// Percorro a lista de palavras em portugues, cada uma vai ser um nó
+					int idxENG = 1 ; //Indice do vetor de palvras em ingles
+					int size = strlen(wordsFile);
+					
+					int x = i+1;
+					
+					while(wordsFile[x]!='\0'){
+						palavra_portugues[idxENG-1] = wordsFile[x];
+
+			            if(wordsFile[x]== ',' ){
+			                palavra_portugues[idxENG-1] = '\0';
+			                idxENG = 0;           
+			            	addArv(raiz, palavra_portugues, promove, NULL);
+						}
+
+						x++;
+						idxENG++;
+
+						if(wordsFile[x] =='\0'){
+							palavra_portugues[idxENG-1] ='\0';
+			            	addArv(raiz, palavra_portugues, promove, NULL);
+						}
+						
+						
+					}
+				}
+            }
+        }
+    }*/
+
+
+
+
+    showArv(*raiz);
+
     return 0;
 }
 
 arvore * addArv(arvore **raiz, char *string, char *promove, arvore **pai){
     arvore *paux;
 
-    if (raiz == NULL) {
-        raiz = criaNo(string, NULL, NULL, NULL);
-        printf("No Criado\n");
+    if (*raiz == NULL) {
+        *raiz = criaNo(string, NULL, NULL, NULL);
         paux = NULL;
     } else {
         if (ehfolha(*raiz)) {
@@ -67,7 +125,7 @@ arvore * addArv(arvore **raiz, char *string, char *promove, arvore **pai){
 
     if (paux != NULL) {
         if (pai == NULL) {
-            raiz = criaNo(promove, (*raiz), paux, NULL);
+            *raiz = criaNo(promove, (*raiz), paux, NULL);
             paux = NULL;
         } else if ((*pai)->nInfos == 1) {
             *pai = adicionaNo(pai, promove, paux);
@@ -83,7 +141,7 @@ arvore * addArv(arvore **raiz, char *string, char *promove, arvore **pai){
 }
 
 arvore * quebraNo(arvore **raiz, char *string, char *promove, arvore *subArvore){
-    arvore **paux;
+    arvore *paux;
     int comparacao1 = strcmp(string, (*raiz)->palavra1);
     int comparacao2 = strcmp(string, (*raiz)->palavra2);
     
@@ -102,20 +160,19 @@ arvore * quebraNo(arvore **raiz, char *string, char *promove, arvore *subArvore)
     (*raiz)->nInfos = 1;
     (*raiz)->dir = NULL;
 
-    return *paux;
+    return paux;
 }
 
-arvore ** criaNo(char *string, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir){
-    arvore **no = malloc(sizeof(arvore));
+arvore * criaNo(char *string, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir){
+    arvore *no = malloc(sizeof(arvore));
     
-    printf("aqui\n");
-    (*no)->dir = filhoDir;
-    (*no)->meio = filhoCen;
-    (*no)->esq = filhoEsq;
+    no->dir = filhoDir;
+    no->meio = filhoCen;
+    no->esq = filhoEsq;
     
-    strcpy((*no)->palavra1, string);
-    (*no)->nInfos = 1;
-    printf("alocado\n");
+    strcpy(no->palavra1, string);
+    no->nInfos = 1;
+
     return no;
 }
 
@@ -135,6 +192,25 @@ arvore * adicionaNo(arvore **raiz, char *string, arvore *paux){
     return (*raiz);
 }
 
+arvore * busca(arvore *no, char *string){
+    arvore *resultado = (arvore *) malloc(sizeof(arvore));
+    resultado = NULL;
+
+    if(no != NULL){
+        int returnCMP1 = strcmp(string, no->palavra1);
+        int returnCMP2 = strcmp(string, no->palavra2);
+        if(returnCMP1 != 0){
+            if(returnCMP1 < 0) busca(no->esq, string);
+            else if (no->nInfos == 1 || returnCMP2 < 0) busca(no->meio, string);
+            else busca(no->dir, string);
+        } else {
+            resultado = no;
+        }
+    }
+
+    return resultado;
+}
+
 int ehfolha(arvore *raiz){
     int folha = 0;
     if (raiz->dir == NULL && raiz->meio == NULL && raiz->esq == NULL)
@@ -147,6 +223,7 @@ void showArv(arvore *raiz){
         printf("{%s %s :",raiz->palavra1, raiz->palavra2);
         //showList(raiz->ingles);
         showArv(raiz->esq);
+        showArv(raiz->meio);
         showArv(raiz->dir);
         printf("}");
     }
