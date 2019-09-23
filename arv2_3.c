@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef struct text{
+    char palavra[25];
+    struct text *prox;
+} text;
+
 typedef struct arvore {
     int nInfos;
     char palavra1[25];
@@ -13,13 +18,17 @@ typedef struct arvore {
     struct arvore *esq;
 } arvore;
 
+arvore *buscada = NULL;
+
+
 int ehfolha(arvore *raiz);
 void showArv(arvore *raiz);
-arvore * busca(arvore *no, char *string);
+arvore * busca(arvore *no, char *string,int *slot);
 arvore * adicionaNo(arvore **raiz, char *string, arvore *paux);
 arvore * addArv(arvore **raiz, char *string, char *promove, arvore **pai);
 arvore * quebraNo(arvore **raiz, char *string, char *promove, arvore *subArvore);
 arvore * criaNo(char *string, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir);
+text * addList(text *lista , char *ingles);
 
 int main(){
 
@@ -35,12 +44,8 @@ int main(){
 	file = fopen("words.txt", "r");
 
 	char *unidade = (char *) malloc(sizeof(char));
-    addArv(raiz, "abcd", promove, NULL);
-    arvore **res;
-    *res = NULL;
-    //busca(*raiz,"abcd");
 
-  /*  while( (fscanf(file , "%s\n",wordsFile))!=EOF ){
+    while( (fscanf(file , "%s\n",wordsFile))!=EOF ){
         char *palavra_ingles = (char *) malloc(sizeof(char));
 		char *palavra_portugues = (char *) malloc(sizeof(char));
 
@@ -52,7 +57,7 @@ int main(){
 			
 			unidade[i] = '\0';
 
-			printf("%s\n",unidade);
+			// printf("%s\n",unidade);
         }else{
             int n = strlen(wordsFile);
             for(int i = 0 ; i < n; i++){
@@ -68,14 +73,25 @@ int main(){
 					int size = strlen(wordsFile);
 					
 					int x = i+1;
+					int slot;
 					
-					while(wordsFile[x]!='\0'){
+                    while(wordsFile[x]!='\0'){
 						palavra_portugues[idxENG-1] = wordsFile[x];
 
 			            if(wordsFile[x]== ',' ){
 			                palavra_portugues[idxENG-1] = '\0';
-			                idxENG = 0;           
-			            	addArv(raiz, palavra_portugues, promove, NULL);
+			                idxENG = 0;
+
+                            arvore *novo = (arvore *) malloc(sizeof(arvore));
+                            novo->dir = NULL;
+                            novo->esq = NULL;
+                            novo->meio = NULL;
+                            novo->ingles1 = addList(novo->ingles1, palavra_ingles); 
+
+                            buscada = busca(*raiz , palavra_portugues , &slot);
+                            if(buscada == NULL)           
+			            	    addArv(raiz, palavra_portugues, promove, NULL);
+
 						}
 
 						x++;
@@ -83,7 +99,11 @@ int main(){
 
 						if(wordsFile[x] =='\0'){
 							palavra_portugues[idxENG-1] ='\0';
-			            	addArv(raiz, palavra_portugues, promove, NULL);
+                            
+                            buscada = busca(*raiz , palavra_portugues , &slot);
+                            if(buscada == NULL)           
+                                addArv(raiz, palavra_portugues, promove, NULL);
+
 						}
 						
 						
@@ -91,9 +111,7 @@ int main(){
 				}
             }
         }
-    }*/
-
-
+    }
 
 
     showArv(*raiz);
@@ -192,20 +210,39 @@ arvore * adicionaNo(arvore **raiz, char *string, arvore *paux){
     return (*raiz);
 }
 
-arvore * busca(arvore *no, char *string){
+arvore * busca(arvore *no, char *string, int *slot){
+    
     arvore *resultado = (arvore *) malloc(sizeof(arvore));
     resultado = NULL;
-
     if(no != NULL){
+
         int returnCMP1 = strcmp(string, no->palavra1);
         int returnCMP2 = strcmp(string, no->palavra2);
-        if(returnCMP1 != 0){
-            if(returnCMP1 < 0) busca(no->esq, string);
-            else if (no->nInfos == 1 || returnCMP2 < 0) busca(no->meio, string);
-            else busca(no->dir, string);
-        } else {
-            resultado = no;
+
+        if(no->nInfos == 1){
+            if(returnCMP1 == 0)
+                return no;
+            else if(returnCMP1 < 0)
+                resultado = busca(no->esq , string , slot);
+            else
+                resultado = busca(no->meio , string , slot);
         }
+
+        else{
+            if(returnCMP1 == 0){
+                return no;
+            }
+            else if(returnCMP2 == 0)
+                return no;
+            else if(returnCMP1 < 0)
+                resultado = busca(no->esq , string , slot);
+            else if(returnCMP2>0)
+                resultado = busca(no->dir , string , slot);
+            else
+                resultado = busca(no->meio , string , slot);
+
+        }
+
     }
 
     return resultado;
@@ -227,4 +264,12 @@ void showArv(arvore *raiz){
         showArv(raiz->dir);
         printf("}");
     }
+}
+text *addList(text *lista , char *ingles){
+
+    text *novo = (text *)malloc(sizeof(text));
+    strcpy(novo->palavra , ingles);
+    novo->prox = lista;
+    text *aux;
+    return novo;
 }

@@ -2,7 +2,7 @@
 egg:ovo
 scheme:programa
 bag:saco,meusaco
-ugly:feio,horrivel
+ugly:feio,horrivel,meusaco
 beautiful:bonita,bela
 software:programa,aplicativo,aplicacao,bugado
-application:aplicativo,programa
+application:aplicativo,programa,aplicativo,bonita
