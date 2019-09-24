@@ -18,9 +18,6 @@ typedef struct arvore {
     struct arvore *esq;
 } arvore;
 
-arvore *buscada = NULL;
-
-
 int ehfolha(arvore *raiz);
 void showArv(arvore *raiz);
 arvore * busca(arvore *no, char *string,int *slot);
@@ -32,8 +29,8 @@ text * addList(text *lista , char *ingles);
 
 int main(){
 
-    arvore **raiz;
-    *raiz = NULL;
+    arvore *raiz;
+    raiz = NULL;
     char *promove = malloc(sizeof(char)*25);
 
     FILE *file;
@@ -77,21 +74,24 @@ int main(){
 					
                     while(wordsFile[x]!='\0'){
 						palavra_portugues[idxENG-1] = wordsFile[x];
+                        arvore *buscada = NULL;
 
 			            if(wordsFile[x]== ',' ){
 			                palavra_portugues[idxENG-1] = '\0';
 			                idxENG = 0;
-
+                            
                             arvore *novo = (arvore *) malloc(sizeof(arvore));
                             novo->dir = NULL;
                             novo->esq = NULL;
                             novo->meio = NULL;
                             novo->ingles1 = addList(novo->ingles1, palavra_ingles); 
-
-                            buscada = busca(*raiz , palavra_portugues , &slot);
-                            if(buscada == NULL)           
-			            	    addArv(raiz, palavra_portugues, promove, NULL);
-
+                            
+                            buscada = busca(raiz , palavra_portugues , &slot);
+                            if(buscada == NULL){
+			            	    addArv(&raiz, palavra_portugues, promove, NULL);
+                            } else {
+                                buscada->ingles1 = addList(novo->ingles1, palavra_ingles);
+                            }
 						}
 
 						x++;
@@ -100,9 +100,9 @@ int main(){
 						if(wordsFile[x] =='\0'){
 							palavra_portugues[idxENG-1] ='\0';
                             
-                            buscada = busca(*raiz , palavra_portugues , &slot);
+                            buscada = busca(raiz , palavra_portugues , &slot);
                             if(buscada == NULL)           
-                                addArv(raiz, palavra_portugues, promove, NULL);
+                                addArv(&raiz, palavra_portugues, promove, NULL);
 
 						}
 						
@@ -114,7 +114,8 @@ int main(){
     }
 
 
-    showArv(*raiz);
+    showArv(raiz);
+    printf("\n");
 
     return 0;
 }
