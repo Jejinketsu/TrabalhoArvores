@@ -18,6 +18,11 @@ typedef struct arvore {
     struct arvore *esq;
 } arvore;
 
+typedef struct unidade{
+    arvore *arvore;
+    char name[100];
+} unidade;
+
 int ehfolha(arvore *raiz);
 void showArv(arvore *raiz);
 void showList(text *lista);
@@ -29,7 +34,50 @@ arvore * adicionaNo(arvore **raiz, text *listaIng, char *string, arvore *paux);
 arvore * quebraNo(arvore **raiz, char *string, text *listaIng, char *promove, text **promoveT, arvore *subArvore);
 arvore * criaNo(char *string, text *listaIng, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir);
 
+void cadastrar(char *fileName,unidade *unidades,int countUnidades);
+
+
 int main(){
+
+    int enter = -1;
+    int countUnidades = 0;
+    unidade *unidades = malloc(sizeof(unidade));
+    
+    while(enter!=4){
+        printf("1 - Cadastrar Unidade\n");
+        printf("2 - Mostrar Unidade\n");
+        printf("3 - Buscar Palavra Portugues\n");
+        printf("4 - Sair\n");
+        scanf("%d",&enter);
+
+        char file[200];
+        int idx_unidade = 0;
+        switch(enter){
+
+            case 1:
+                printf("Arquivo Com o dicionario ingles/portugues\n");
+                scanf("%s",file);
+                cadastrar(file,unidades,countUnidades);
+                countUnidades++;
+                break;
+            case 2:
+                printf("Qual unidade exibir? [0 a %d]\n",countUnidades-1);
+                scanf("%d",&idx_unidade);
+                printf("Unidade %d -----------------------------------\n",countUnidades-1);
+                showArv(unidades[countUnidades-1].arvore);
+                printf("----------------------------------------------\n");
+
+        }
+
+    }
+
+
+
+    return 0;
+}
+
+
+void cadastrar(char *fileName,unidade *unidades,int countUnidades){
 
     arvore *raiz;
     raiz = NULL;
@@ -37,55 +85,54 @@ int main(){
     text **promoveT = malloc(sizeof(text*));
 
     FILE *file;
-	char wordsFile[255];
-	char wordENG[50];
-	char wordsPtbr[156];
-	char *stringCat;
-	file = fopen("words.txt", "r");
+    char wordsFile[255];
+    char wordENG[50];
+    char wordsPtbr[156];
+    char *stringCat;
+    file = fopen(fileName, "r");
 
-	char *unidade = (char *) malloc(sizeof(char));
+    char *unidadeNome = (char *) malloc(sizeof(char));
 
     while( (fscanf(file , "%s\n",wordsFile))!=EOF ){
         char *palavra_ingles = (char *) malloc(sizeof(char));
-		char *palavra_portugues = (char *) malloc(sizeof(char));
+        char *palavra_portugues = (char *) malloc(sizeof(char));
 
-		if(wordsFile[0]=='%'){
-			int i;
-			
-			for(i=1; wordsFile[i]!='\0' ; i++)
-				unidade[i-1] = wordsFile[i];
-			
-			unidade[i] = '\0';
+        if(wordsFile[0]=='%'){
+            int i;
+            
+            for(i=1; wordsFile[i]!='\0' ; i++)
+                unidadeNome[i-1] = wordsFile[i];
+            
+            unidadeNome[i] = '\0';
 
-			// printf("%s\n",unidade);
         }else{
             int n = strlen(wordsFile);
             for(int i = 0 ; i < n; i++){
                 if(wordsFile[i]!=':'){
-					palavra_ingles[i] = wordsFile[i];
-				} else {
-					// Pego a palvara em Ingles
-					palavra_ingles[i] = '\0';
+                    palavra_ingles[i] = wordsFile[i];
+                } else {
+                    // Pego a palvara em Ingles
+                    palavra_ingles[i] = '\0';
 
 
-					// Percorro a lista de palavras em portugues, cada uma vai ser um nó
-					int idxENG = 1 ; //Indice do vetor de palvras em ingles
-					int size = strlen(wordsFile);
-					
-					int x = i+1;
-					int slot;
-					
+                    // Percorro a lista de palavras em portugues, cada uma vai ser um nó
+                    int idxENG = 1 ; //Indice do vetor de palvras em ingles
+                    int size = strlen(wordsFile);
+                    
+                    int x = i+1;
+                    int slot;
+                    
                     while(wordsFile[x]!='\0'){
-						palavra_portugues[idxENG-1] = wordsFile[x];
+                        palavra_portugues[idxENG-1] = wordsFile[x];
                         arvore *buscada = NULL;
 
-			            if(wordsFile[x]== ','){
-			                palavra_portugues[idxENG-1] = '\0';
-			                idxENG = 0;
+                        if(wordsFile[x]== ','){
+                            palavra_portugues[idxENG-1] = '\0';
+                            idxENG = 0;
                             
                             buscada = busca(raiz, palavra_portugues, &slot);
                             if(buscada == NULL){
-			            	    addArv(&raiz, palavra_portugues, promove, promoveT, NULL);
+                                addArv(&raiz, palavra_portugues, promove, promoveT, NULL);
                                 buscada = busca(raiz , palavra_portugues , &slot);
                                 if(slot == 1) buscada->ingles1 = addList(buscada->ingles1, palavra_ingles);
                                 else buscada->ingles2 = addList(buscada->ingles2, palavra_ingles);
@@ -93,17 +140,17 @@ int main(){
                                 if(slot == 1) buscada->ingles1 = addList(buscada->ingles1, palavra_ingles);
                                 else buscada->ingles2 = addList(buscada->ingles2, palavra_ingles);
                             }
-						}
+                        }
 
-						x++;
-						idxENG++;
+                        x++;
+                        idxENG++;
 
-						if(wordsFile[x] =='\0'){
-							palavra_portugues[idxENG-1] ='\0';
+                        if(wordsFile[x] =='\0'){
+                            palavra_portugues[idxENG-1] ='\0';
                             
                             buscada = busca(raiz, palavra_portugues, &slot);
                             if(buscada == NULL){
-			            	    addArv(&raiz, palavra_portugues, promove, promoveT, NULL);
+                                addArv(&raiz, palavra_portugues, promove, promoveT, NULL);
                                 buscada = busca(raiz , palavra_portugues , &slot);
                                 if(slot == 1) buscada->ingles1 = addList(buscada->ingles1, palavra_ingles);
                                 else buscada->ingles2 = addList(buscada->ingles2, palavra_ingles);
@@ -112,21 +159,20 @@ int main(){
                                 else buscada->ingles2 = addList(buscada->ingles2, palavra_ingles);
                             }
 
-						}
-						
-						
-					}
-				}
+                        }
+                        
+                        
+                    }
+                }
             }
         }
     }
 
+    unidades[countUnidades].arvore = raiz;
+    strcpy(unidades[countUnidades].name,unidadeNome);
 
-    showArv(raiz);
-    printf("\n");
-
-    return 0;
 }
+
 
 arvore * addArv(arvore **raiz, char *string, char *promove, text **promoveT, arvore **pai){
     arvore *paux;
