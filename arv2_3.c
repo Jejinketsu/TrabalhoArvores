@@ -35,7 +35,7 @@ arvore * quebraNo(arvore **raiz, char *string, text *listaIng, char *promove, te
 arvore * criaNo(char *string, text *listaIng, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir);
 
 void cadastrar(char *fileName,unidade *unidades,int countUnidades);
-
+void buscarPortugues(unidade *unidades, int contUnidades, char *string);
 
 int main(){
 
@@ -51,6 +51,7 @@ int main(){
         scanf("%d",&enter);
 
         char file[200];
+        char palavra[50];
         int idx_unidade = 0;
         switch(enter){
 
@@ -66,7 +67,11 @@ int main(){
                 printf("Unidade %d -----------------------------------\n",countUnidades-1);
                 showArv(unidades[countUnidades-1].arvore);
                 printf("----------------------------------------------\n");
-
+                break;
+            case 3:
+                printf("Qual palavra deseja buscar?\n");
+                scanf("%s", palavra);
+                buscarPortugues(unidades, countUnidades, palavra);
         }
 
     }
@@ -173,6 +178,18 @@ void cadastrar(char *fileName,unidade *unidades,int countUnidades){
 
 }
 
+void buscarPortugues(unidade *unidades, int contUnidades, char *string){
+    int slot;
+    for(int i = 0; i < contUnidades;i++){
+        printf("Unidade %d\n", i);
+        arvore *buscada = busca(unidades[i].arvore, string, &slot);
+        if(buscada != NULL){
+            if(slot == 1) showList(buscada->ingles1);
+            else showList(buscada->ingles2);
+        }
+        printf("\n");
+    }
+}
 
 arvore * addArv(arvore **raiz, char *string, char *promove, text **promoveT, arvore **pai){
     arvore *paux;
