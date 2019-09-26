@@ -1,8 +1,4 @@
 %TESTE
 egg:ovo
 scheme:programa
-bag:saco,meusaco
-ugly:feio,horrivel,meusaco
-beautiful:bonita,bela
-software:programa,aplicativo,aplicacao,bugado
-application:aplicativo,programa,aplicativo,bonita
+bag:saco

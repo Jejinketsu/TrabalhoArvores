@@ -20,18 +20,21 @@ typedef struct arvore {
 
 int ehfolha(arvore *raiz);
 void showArv(arvore *raiz);
-arvore * busca(arvore *no, char *string,int *slot);
-arvore * adicionaNo(arvore **raiz, char *string, arvore *paux);
-arvore * addArv(arvore **raiz, char *string, char *promove, arvore **pai);
-arvore * quebraNo(arvore **raiz, char *string, char *promove, arvore *subArvore);
-arvore * criaNo(char *string, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir);
-text * addList(text *lista , char *ingles);
+void showList(text *lista);
+text * addList(text *lista, char *ingles);
+
+arvore * busca(arvore *no, char *string, int *slot);
+arvore * addArv(arvore **raiz, char *string, char *promove, text *promoveT, arvore **pai);
+arvore * adicionaNo(arvore **raiz, text *listaIng, char *string, arvore *paux);
+arvore * quebraNo(arvore **raiz, char *string, text *listaIng, char *promove, text *promoveT, arvore *subArvore);
+arvore * criaNo(char *string, text *listaIng, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir);
 
 int main(){
 
     arvore *raiz;
     raiz = NULL;
     char *promove = malloc(sizeof(char)*25);
+    text *promoveT = malloc(sizeof(text));
 
     FILE *file;
 	char wordsFile[255];
@@ -76,21 +79,19 @@ int main(){
 						palavra_portugues[idxENG-1] = wordsFile[x];
                         arvore *buscada = NULL;
 
-			            if(wordsFile[x]== ',' ){
+			            if(wordsFile[x]== ','){
 			                palavra_portugues[idxENG-1] = '\0';
 			                idxENG = 0;
                             
-                            arvore *novo = (arvore *) malloc(sizeof(arvore));
-                            novo->dir = NULL;
-                            novo->esq = NULL;
-                            novo->meio = NULL;
-                            novo->ingles1 = addList(novo->ingles1, palavra_ingles); 
-                            
-                            buscada = busca(raiz , palavra_portugues , &slot);
+                            buscada = busca(raiz, palavra_portugues, &slot);
                             if(buscada == NULL){
-			            	    addArv(&raiz, palavra_portugues, promove, NULL);
+			            	    addArv(&raiz, palavra_portugues, promove, promoveT, NULL);
+                                buscada = busca(raiz , palavra_portugues , &slot);
+                                if(slot == 1) buscada->ingles1 = addList(buscada->ingles1, palavra_ingles);
+                                else buscada->ingles2 = addList(buscada->ingles2, palavra_ingles);
                             } else {
-                                buscada->ingles1 = addList(novo->ingles1, palavra_ingles);
+                                if(slot == 1) buscada->ingles1 = addList(buscada->ingles1, palavra_ingles);
+                                else buscada->ingles2 = addList(buscada->ingles2, palavra_ingles);
                             }
 						}
 
@@ -100,9 +101,16 @@ int main(){
 						if(wordsFile[x] =='\0'){
 							palavra_portugues[idxENG-1] ='\0';
                             
-                            buscada = busca(raiz , palavra_portugues , &slot);
-                            if(buscada == NULL)           
-                                addArv(&raiz, palavra_portugues, promove, NULL);
+                            buscada = busca(raiz, palavra_portugues, &slot);
+                            if(buscada == NULL){
+			            	    addArv(&raiz, palavra_portugues, promove, promoveT, NULL);
+                                buscada = busca(raiz , palavra_portugues , &slot);
+                                if(slot == 1) buscada->ingles1 = addList(buscada->ingles1, palavra_ingles);
+                                else buscada->ingles2 = addList(buscada->ingles2, palavra_ingles);
+                            } else {
+                                if(slot == 1) buscada->ingles1 = addList(buscada->ingles1, palavra_ingles);
+                                else buscada->ingles2 = addList(buscada->ingles2, palavra_ingles);
+                            }
 
 						}
 						
@@ -120,46 +128,47 @@ int main(){
     return 0;
 }
 
-arvore * addArv(arvore **raiz, char *string, char *promove, arvore **pai){
+arvore * addArv(arvore **raiz, char *string, char *promove, text *promoveT, arvore **pai){
     arvore *paux;
 
     if (*raiz == NULL) {
-        *raiz = criaNo(string, NULL, NULL, NULL);
+        *raiz = criaNo(string, NULL, NULL, NULL, NULL);
         paux = NULL;
     } else {
         if (ehfolha(*raiz)) {
             if ((*raiz)->nInfos == 1) {
-                *raiz = adicionaNo(raiz, string, NULL);
+                *raiz = adicionaNo(raiz, NULL, string, NULL);
                 paux = NULL;
-            } else paux = quebraNo(raiz, string, promove, NULL);
+            } else paux = quebraNo(raiz, string, NULL, promove, promoveT, NULL);
         } else {
             if (strcmp(string, (*raiz)->palavra1) < 0) 
-                paux = addArv(&((*raiz)->esq), string, promove, raiz);
+                paux = addArv(&((*raiz)->esq), string, promove, promoveT, raiz);
             else if (((*raiz)->nInfos == 1) || (strcmp(string, (*raiz)->palavra2) < 0))
-                paux = addArv(&((*raiz)->meio), string, promove, raiz);
+                paux = addArv(&((*raiz)->meio), string, promove, promoveT, raiz);
             else
-                paux = addArv(&((*raiz)->dir), string, promove, raiz);
+                paux = addArv(&((*raiz)->dir), string, promove, promoveT, raiz);
         }
     }
 
     if (paux != NULL) {
         if (pai == NULL) {
-            *raiz = criaNo(promove, (*raiz), paux, NULL);
+            *raiz = criaNo(promove, promoveT, (*raiz), paux, NULL);
             paux = NULL;
         } else if ((*pai)->nInfos == 1) {
-            *pai = adicionaNo(pai, promove, paux);
+            *pai = adicionaNo(pai, promoveT, promove, paux);
             paux = NULL;
         } else {
             char guardar[30];
+            text *guardarIng = promoveT;
             strcpy(guardar, promove);
-            paux = quebraNo(pai, guardar, promove, paux);
+            paux = quebraNo(pai, guardar, guardarIng, promove, promoveT, paux);
         }
     }
 
     return paux;
 }
 
-arvore * quebraNo(arvore **raiz, char *string, char *promove, arvore *subArvore){
+arvore * quebraNo(arvore **raiz, char *string, text *listaIng, char *promove, text *promoveT, arvore *subArvore){
     arvore *paux;
     int comparacao1 = strcmp(string, (*raiz)->palavra1);
     int comparacao2 = strcmp(string, (*raiz)->palavra2);
@@ -167,22 +176,29 @@ arvore * quebraNo(arvore **raiz, char *string, char *promove, arvore *subArvore)
     if(comparacao1 < 0) {
         strcpy(promove, (*raiz)->palavra1);
         strcpy((*raiz)->palavra1, string);
+        promoveT = (*raiz)->ingles1;
+        (*raiz)->ingles1 = listaIng;
     } else if(comparacao2 > 0) {
         strcpy(promove, (*raiz)->palavra2);
         strcpy((*raiz)->palavra2, string);
+        promoveT = (*raiz)->ingles2;
+        (*raiz)->ingles2 = listaIng;
     } else {
         strcpy(promove, string);
+        promoveT = listaIng;
     }
 
-    paux = criaNo((*raiz)->palavra2, (*raiz)->dir, subArvore, NULL);
+    paux = criaNo((*raiz)->palavra2, (*raiz)->ingles2, (*raiz)->dir, subArvore, NULL);
 
     (*raiz)->nInfos = 1;
+    strcpy((*raiz)->palavra2, "");
     (*raiz)->dir = NULL;
+    (*raiz)->ingles2 = NULL;
 
     return paux;
 }
 
-arvore * criaNo(char *string, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir){
+arvore * criaNo(char *string, text *listaIng, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir){
     arvore *no = malloc(sizeof(arvore));
     
     no->dir = filhoDir;
@@ -191,11 +207,12 @@ arvore * criaNo(char *string, arvore *filhoEsq, arvore *filhoCen, arvore *filhoD
     
     strcpy(no->palavra1, string);
     no->nInfos = 1;
+    no->ingles1 = listaIng;
 
     return no;
 }
 
-arvore * adicionaNo(arvore **raiz, char *string, arvore *paux){
+arvore * adicionaNo(arvore **raiz, text *listaIng, char *string, arvore *paux){
     int comparacao = strcmp(string, (*raiz)->palavra1);
     if(comparacao >= 0) {
         strcpy((*raiz)->palavra2, string);
@@ -204,6 +221,8 @@ arvore * adicionaNo(arvore **raiz, char *string, arvore *paux){
     else {
         strcpy((*raiz)->palavra2, (*raiz)->palavra1);
         strcpy((*raiz)->palavra1, string);
+        (*raiz)->ingles2 = (*raiz)->ingles1;
+        (*raiz)->ingles1 = listaIng;
         (*raiz)->dir = (*raiz)->meio;
         (*raiz)->meio = paux;
     }
@@ -219,10 +238,13 @@ arvore * busca(arvore *no, char *string, int *slot){
 
         int returnCMP1 = strcmp(string, no->palavra1);
         int returnCMP2 = strcmp(string, no->palavra2);
+        *slot = 0;
 
         if(no->nInfos == 1){
-            if(returnCMP1 == 0)
+            if(returnCMP1 == 0){
+                *slot = 1;
                 return no;
+            }
             else if(returnCMP1 < 0)
                 resultado = busca(no->esq , string , slot);
             else
@@ -231,10 +253,13 @@ arvore * busca(arvore *no, char *string, int *slot){
 
         else{
             if(returnCMP1 == 0){
+                *slot = 1;
                 return no;
             }
-            else if(returnCMP2 == 0)
+            else if(returnCMP2 == 0){
+                *slot = 2;
                 return no;
+            }
             else if(returnCMP1 < 0)
                 resultado = busca(no->esq , string , slot);
             else if(returnCMP2>0)
@@ -258,14 +283,18 @@ int ehfolha(arvore *raiz){
 
 void showArv(arvore *raiz){
     if(raiz!=NULL){
-        printf("{%s %s :",raiz->palavra1, raiz->palavra2);
-        //showList(raiz->ingles);
+        printf("{%s ( ",raiz->palavra1);
+        showList(raiz->ingles1);
+        printf(") %s ( ", raiz->palavra2);
+        showList(raiz->ingles2);
+        printf(")");
+        printf("}\n");
         showArv(raiz->esq);
         showArv(raiz->meio);
         showArv(raiz->dir);
-        printf("}");
     }
 }
+
 text *addList(text *lista , char *ingles){
 
     text *novo = (text *)malloc(sizeof(text));
@@ -273,4 +302,11 @@ text *addList(text *lista , char *ingles){
     novo->prox = lista;
     text *aux;
     return novo;
+}
+
+void showList(text *lista){
+    if(lista != NULL){
+        printf("%s ", lista->palavra);
+        showList(lista->prox);
+    }
 }
