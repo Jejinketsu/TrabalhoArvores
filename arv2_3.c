@@ -24,9 +24,9 @@ void showList(text *lista);
 text * addList(text *lista, char *ingles);
 
 arvore * busca(arvore *no, char *string, int *slot);
-arvore * addArv(arvore **raiz, char *string, char *promove, text *promoveT, arvore **pai);
+arvore * addArv(arvore **raiz, char *string, char *promove, text **promoveT, arvore **pai);
 arvore * adicionaNo(arvore **raiz, text *listaIng, char *string, arvore *paux);
-arvore * quebraNo(arvore **raiz, char *string, text *listaIng, char *promove, text *promoveT, arvore *subArvore);
+arvore * quebraNo(arvore **raiz, char *string, text *listaIng, char *promove, text **promoveT, arvore *subArvore);
 arvore * criaNo(char *string, text *listaIng, arvore *filhoEsq, arvore *filhoCen, arvore *filhoDir);
 
 int main(){
@@ -34,7 +34,7 @@ int main(){
     arvore *raiz;
     raiz = NULL;
     char *promove = malloc(sizeof(char)*25);
-    text *promoveT = malloc(sizeof(text));
+    text **promoveT = malloc(sizeof(text*));
 
     FILE *file;
 	char wordsFile[255];
@@ -128,7 +128,7 @@ int main(){
     return 0;
 }
 
-arvore * addArv(arvore **raiz, char *string, char *promove, text *promoveT, arvore **pai){
+arvore * addArv(arvore **raiz, char *string, char *promove, text **promoveT, arvore **pai){
     arvore *paux;
 
     if (*raiz == NULL) {
@@ -139,7 +139,9 @@ arvore * addArv(arvore **raiz, char *string, char *promove, text *promoveT, arvo
             if ((*raiz)->nInfos == 1) {
                 *raiz = adicionaNo(raiz, NULL, string, NULL);
                 paux = NULL;
-            } else paux = quebraNo(raiz, string, NULL, promove, promoveT, NULL);
+            } else{
+                paux = quebraNo(raiz, string, NULL, promove, promoveT, NULL);
+            }
         } else {
             if (strcmp(string, (*raiz)->palavra1) < 0) 
                 paux = addArv(&((*raiz)->esq), string, promove, promoveT, raiz);
@@ -152,14 +154,14 @@ arvore * addArv(arvore **raiz, char *string, char *promove, text *promoveT, arvo
 
     if (paux != NULL) {
         if (pai == NULL) {
-            *raiz = criaNo(promove, promoveT, (*raiz), paux, NULL);
+            *raiz = criaNo(promove, *promoveT, (*raiz), paux, NULL);
             paux = NULL;
         } else if ((*pai)->nInfos == 1) {
-            *pai = adicionaNo(pai, promoveT, promove, paux);
+            *pai = adicionaNo(pai, *promoveT, promove, paux);
             paux = NULL;
         } else {
             char guardar[30];
-            text *guardarIng = promoveT;
+            text *guardarIng = *promoveT;
             strcpy(guardar, promove);
             paux = quebraNo(pai, guardar, guardarIng, promove, promoveT, paux);
         }
@@ -168,7 +170,7 @@ arvore * addArv(arvore **raiz, char *string, char *promove, text *promoveT, arvo
     return paux;
 }
 
-arvore * quebraNo(arvore **raiz, char *string, text *listaIng, char *promove, text *promoveT, arvore *subArvore){
+arvore * quebraNo(arvore **raiz, char *string, text *listaIng, char *promove, text **promoveT, arvore *subArvore){
     arvore *paux;
     int comparacao1 = strcmp(string, (*raiz)->palavra1);
     int comparacao2 = strcmp(string, (*raiz)->palavra2);
@@ -176,16 +178,16 @@ arvore * quebraNo(arvore **raiz, char *string, text *listaIng, char *promove, te
     if(comparacao1 < 0) {
         strcpy(promove, (*raiz)->palavra1);
         strcpy((*raiz)->palavra1, string);
-        promoveT = (*raiz)->ingles1;
+        *promoveT = (*raiz)->ingles1;
         (*raiz)->ingles1 = listaIng;
     } else if(comparacao2 > 0) {
         strcpy(promove, (*raiz)->palavra2);
         strcpy((*raiz)->palavra2, string);
-        promoveT = (*raiz)->ingles2;
+        *promoveT = (*raiz)->ingles2;
         (*raiz)->ingles2 = listaIng;
     } else {
         strcpy(promove, string);
-        promoveT = listaIng;
+        *promoveT = listaIng;
     }
 
     paux = criaNo((*raiz)->palavra2, (*raiz)->ingles2, (*raiz)->dir, subArvore, NULL);

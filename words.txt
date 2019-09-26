@@ -1,4 +1,5 @@
 %TESTE
-egg:ovo
-scheme:programa
-bag:saco
+egg:A
+scheme:B
+bag:C
+egg:C
