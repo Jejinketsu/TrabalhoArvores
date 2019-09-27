@@ -43,7 +43,7 @@ int main (){
     
     ocorrencia *lista = malloc(sizeof(ocorrencia));
 
-    for(int i = 0; i < 30; i++){
+    for(int i = 0; i < TESTES; i++){
         arvore *raiz = malloc(sizeof(arvore));
         raiz->valor = rand()%100;
 

@@ -46,7 +46,7 @@ int main (){
 
         clock_t inicio = clock();
 
-        for(int i = 1; i < 100000; i++){
+        for(int i = 1; i < 1000000; i++){
             arvore *arv = malloc(sizeof(arvore));
             arv->valor = rand()%100;
             addArv(raiz, arv);
