@@ -15,7 +15,7 @@ typedef struct ocorrencia{
 
 ocorrencia * addNum(ocorrencia *lista, int new);
 ocorrencia * contain(ocorrencia *lista, int num);
-void mostrarLista(ocorrencia *lista);
+void mostrarLista(ocorrencia *lista, int num);
 void addArv(arvore *raiz, arvore *new);
 arvore * freeArv(arvore *raiz);
 int nos(arvore *no);
@@ -26,20 +26,27 @@ int altura(arvore *no, int valor, int maior);
 
 arvore * busca(arvore *no, int valor);
 
+#define TESTES 30
+
 int main (){
 
     srand(time(NULL));
     float tempoTotal = 0;
+    int vetMaiorP[TESTES];
+    int vetMenosP[TESTES];
+    int vetDif[TESTES];
+    float tempoIn[TESTES];
+    float tempoBusc[TESTES];
     
     ocorrencia *lista = malloc(sizeof(ocorrencia));
 
-    for(int i = 0; i < 30; i++){
+    for(int i = 0; i < TESTES; i++){
         arvore *raiz = malloc(sizeof(arvore));
         raiz->valor = rand()%100;
 
         clock_t inicio = clock();
 
-        for(int i = 1; i < 1000; i++){
+        for(int i = 1; i < 100000; i++){
             arvore *arv = malloc(sizeof(arvore));
             arv->valor = rand()%100;
             addArv(raiz, arv);
@@ -48,6 +55,7 @@ int main (){
         clock_t fim = clock();
 
         float tempo = (fim-inicio)*1000 / CLOCKS_PER_SEC;
+        tempoIn[i] = tempo;
         tempoTotal += tempo;
 
         inicio = clock();
@@ -55,23 +63,61 @@ int main (){
         fim = clock();
 
         float tempoBusca = (fim-inicio)*1000 / CLOCKS_PER_SEC;
+        tempoBusc[i] = tempoBusca;
 
         int maiorP = altura(raiz, raiz->valor, 1);
         int menorP = altura(raiz, raiz->valor, 0);
 
+        vetMaiorP[i] = maiorP;
+        vetMenosP[i] = menorP;
+
         //freeArv(raiz);
 
         int diferenca = maiorP-menorP;
+        vetDif[i] = diferenca;
         contain(lista, diferenca);
-
+        /*
         printf("----------Teste %d-------------\n", i+1);
         printf("Maior profundidade: %d\n", maiorP);
         printf("Menor profundidade: %d\n", menorP);
         mostrarLista(lista);
         printf("\nTempo de insercao: %.5fms\n", tempo);
         printf("Tempo de busca: %.5fms\n\n", tempoBusca);
-
+        */
     }
+
+    printf("vetMaiorP\n");
+    for(int i = 0; i < TESTES; i++){
+        printf("%d\n", vetMaiorP[i]);
+    }
+
+    printf("\nvetMenosP\n");
+    for(int i = 0; i < TESTES; i++){
+        printf("%d\n", vetMenosP[i]);
+    }
+
+    printf("\nvetDif\n");
+    for(int i = 0; i < TESTES; i++){
+        printf("%d\n", vetDif[i]);    
+    }
+
+    printf("\nDifNoRepeat\n");
+    mostrarLista(lista, 1);
+
+    printf("\nDifOcorrencia\n");
+    mostrarLista(lista, 0);
+
+    printf("\ntempoIn\n");
+    for(int i = 0; i < TESTES; i++){
+        printf("%.0f\n", tempoIn[i]);  
+    }
+
+    printf("\ntempoBusc\n");
+    for(int i = 0; i < TESTES; i++){
+        printf("%.0f\n", tempoBusc[i]);
+    }
+
+    printf("\nTempo total: %.0f\n", tempoTotal);
 
     return 0;
 }
@@ -101,10 +147,11 @@ ocorrencia * contain(ocorrencia *lista, int num){
     return lista;
 }
 
-void mostrarLista(ocorrencia *lista){
+void mostrarLista(ocorrencia *lista, int num){
     if(lista != NULL){
-        printf("%d: %d, ", lista->num, lista->casos);
-        mostrarLista(lista->prox);
+        if(num) printf("%d\n", lista->num);
+        else printf("%d\n", lista->casos);
+        mostrarLista(lista->prox, num);
     }
 }
 
