@@ -58,10 +58,9 @@ void main(void){
 
         clock_t inicio = clock();
 
-        for(int i = 1; i < 30000; i++){
-            node *arv = malloc(sizeof(node));
-            arv->info = rand()%100;
-            addArv(raiz, arv);
+        for(int i = 1; i < 100000; i++){
+            int info = rand()%100;
+            raiz = insert(raiz, info);
         }
 
         clock_t fim = clock();
@@ -158,7 +157,7 @@ node* insertLLRN(node* no, int valor){
         no->right = insertLLRN(no->right, valor);
 
 
-    if(cor(no->left) == 0 && cor(no->right) == 1)
+    if(cor(no->right) == 1)
         no = rotacionaEsquerda(no);
 
     if(cor(no->left) == 1 && cor(no->left->left) == 1)

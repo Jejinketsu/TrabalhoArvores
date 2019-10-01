@@ -1,39 +1,37 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
+#define tam 10000
+#define repeat 30
 
-typedef struct arvore{
-    int valor, altura;
-    struct arvore *dir;
-    struct arvore *esq;
-    struct arvore *pai;
-} arvore;
+typedef struct arv arvoreAVL;
 
-typedef struct ocorrencia{
-    int num, casos;
-    struct ocorrencia *prox;
-}ocorrencia;
+struct arv{
+    arvoreAVL *dir ,*esq;
+    int valor;
+};
 
-ocorrencia * addNum(ocorrencia *lista, int new);
-ocorrencia * contain(ocorrencia *lista, int num);
-void mostrarLista(ocorrencia *lista, int num);
-int addArv(arvore **raiz, arvore *new);
-void rotacaoRR(arvore **raiz);
-void rotacaoLL(arvore **raiz);
-arvore * freeArv(arvore *raiz);
-int nos(arvore *no);
-int ramos(arvore *no);
-int profundidade(arvore *no, int valor);
-int descendentes(arvore *no);
-int altura(arvore *no, int valor, int maior);
-int max(int esq, int dir);
-arvore *busca(arvore *no, int valor);
+arvoreAVL* nova_arvore();
+arvoreAVL* criarFolha(int valor);
+int maior(int a, int b);
+void rotacaoRR(arvoreAVL** raiz);
+void rotacaoLL(arvoreAVL** raiz);
+void rotacaoLR(arvoreAVL** raiz);
+void rotacaoRL(arvoreAVL** raiz);
+int altura_do_no(arvoreAVL* raiz);
+int inserirAVL(arvoreAVL** raiz, arvoreAVL* NO);
+void mostraArvore(arvoreAVL* raiz);
+int buscarvalor(arvoreAVL* raiz, int valor);
+int maior_folha(arvoreAVL* raiz);
+int menor_folha(arvoreAVL* raiz);
+int* numeroaleatorio(int qtd);
 
 #define TESTES 30
 
-int main (){
+void main(){
+    
+    int casos[]={0 , 0};
 
-    srand(time(NULL));
     float tempoTotal = 0;
     int vetMaiorP[TESTES];
     int vetMenosP[TESTES];
@@ -41,54 +39,56 @@ int main (){
     float tempoIn[TESTES];
     float tempoBusc[TESTES];
     
-    ocorrencia *lista = malloc(sizeof(ocorrencia));
-
-    for(int i = 0; i < TESTES; i++){
-        arvore *raiz = malloc(sizeof(arvore));
-        raiz->valor = rand()%100;
+    for(int i = 0; i<TESTES; i++){
+        arvoreAVL* raiz = nova_arvore();
+       
+        int *aleatorio = numeroaleatorio(tam);
 
         clock_t inicio = clock();
 
-        for(int i = 1; i < 100000; i++){
-            arvore *arv = malloc(sizeof(arvore));
-            arv->valor = rand()%100;
-            addArv(&raiz, arv);
-        }
+        arvoreAVL* folha = NULL;
+        for(int x = 0; x<100000; x++){
+            folha = criarFolha(aleatorio[x]);
+            inserirAVL(&raiz, folha);
+        }        
 
         clock_t fim = clock();
 
-        float tempo = (fim-inicio)*1000 / CLOCKS_PER_SEC;
+        float tempo = (fim-inicio)*1000/CLOCKS_PER_SEC;
         tempoIn[i] = tempo;
+
         tempoTotal += tempo;
 
-        inicio = clock();
-        busca(raiz, 50);
-        fim = clock();
-
-        float tempoBusca = (fim-inicio)*1000 / CLOCKS_PER_SEC;
-        tempoBusc[i] = tempoBusca;
-
-        int maiorP = altura(raiz, raiz->valor, 1);
-        int menorP = altura(raiz, raiz->valor, 0);
-
+        int menorP = menor_folha(raiz);
+        int maiorP = maior_folha(raiz); 
+        
         vetMaiorP[i] = maiorP;
         vetMenosP[i] = menorP;
-
-        //freeArv(raiz);
-
-        int diferenca = maiorP-menorP;
+        
+        int diferenca = abs(menorP - maiorP);
         vetDif[i] = diferenca;
-        contain(lista, diferenca);
+        if(diferenca == 0)
+            casos[0]++;
+        else
+            casos[1]++;
+
+        inicio = clock();
+        int find = buscarvalor(raiz,aleatorio[5]);    
+        fim = clock();
+
+        float tempoBusca = (inicio-fim)*1000/CLOCKS_PER_SEC;
+        tempoBusc[i] = tempoBusca;
+
         /*
-        printf("----------Teste %d-------------\n", i+1);
-        printf("Maior profundidade: %d\n", maiorP);
-        printf("Menor profundidade: %d\n", menorP);
-        mostrarLista(lista);
-        printf("\nTempo de insercao: %.5fms\n", tempo);
-        printf("Tempo de busca: %.5fms\n\n", tempoBusca);
+        printf("Caso %d\n",i+1);
+        printf("Tempo gasto INSERIR: %lf \n", tempo);
+        printf("Menor Nivel: %d\n", maiorP);
+        printf("Maior Nivel: %d\n", maiorP);
+        printf("Tempo de Busca: %lf \n", tempoBusca);
+        printf("-------------\n");
         */
     }
-
+    
     printf("vetMaiorP\n");
     for(int i = 0; i < TESTES; i++){
         printf("%d\n", vetMaiorP[i]);
@@ -105,10 +105,12 @@ int main (){
     }
 
     printf("\nDifNoRepeat\n");
-    mostrarLista(lista, 1);
+    printf("0\n");
+    printf("1\n");
 
     printf("\nDifOcorrencia\n");
-    mostrarLista(lista, 0);
+    printf("%d\n",casos[0]);
+    printf("%d\n",casos[1]);
 
     printf("\ntempoIn\n");
     for(int i = 0; i < TESTES; i++){
@@ -122,143 +124,158 @@ int main (){
 
     printf("\nTempo total: %.0f\n", tempoTotal);
 
-    return 0;
 }
 
-ocorrencia * addNum(ocorrencia *lista, int new){
-    ocorrencia *novo = (ocorrencia *) malloc(sizeof(ocorrencia));
-    novo->num = new;
-    novo->casos = 1;
-    novo->prox = NULL;
-    return novo;
+
+arvoreAVL* nova_arvore(){
+    
+    return NULL;
 }
 
-ocorrencia * contain(ocorrencia *lista, int num){
-    if(lista == NULL){ 
-        lista = addNum(lista, num);
-    } else {
-        ocorrencia *aux;
-        for(aux = lista; aux != NULL; aux = aux->prox){
-            if(aux->num == num){
-                aux->casos += 1;
-                break;
-            }
-            if(aux->prox == NULL) break;
-        }
-        if(aux->prox == NULL) aux->prox = addNum(lista, num);  
-    }
-    return lista;
+arvoreAVL* criarFolha(int valor){
+    arvoreAVL* novoNo = (arvoreAVL*) malloc(sizeof(arvoreAVL));
+    novoNo->esq = NULL;
+    novoNo->dir = NULL;
+    novoNo->valor = valor;
+    return novoNo;
 }
 
-void mostrarLista(ocorrencia *lista, int num){
-    if(lista != NULL){
-        if(num) printf("%d\n", lista->num);
-        else printf("%d\n", lista->casos);
-        mostrarLista(lista->prox, num);
-    }
+int maior(int a, int b){
+    if(a>b)
+        return a;
+    return b;
 }
 
-int addArv(arvore **raiz, arvore *new){
-    int insert = 1;
-    if((*raiz) == NULL){
-        *raiz = new;
-    } else if(new->valor < (*raiz)->valor){
-        if( addArv(&( (*raiz)->esq), new) == 1 ){
-            if(abs(altura((*raiz)->esq, (*raiz)->valor, 1) - altura((*raiz)->dir , (*raiz)->valor, 1)) == 2){
-                if(new->valor < (**raiz).esq->valor){
-                    rotacaoLL(&(*raiz));
-                } else {
-                    rotacaoLL(&(*raiz));
-                    rotacaoRR(&(*raiz));
-                }
-            }
-        }
-    } else if(new->valor > (*raiz)->valor){
-        if( addArv(&( (*raiz)->dir), new) == 1 ){
-            if(abs(altura((*raiz)->esq, (*raiz)->valor, 1) - altura((*raiz)->dir , (*raiz)->valor, 1)) == 2){
-                if(new->valor > (**raiz).esq->valor){
-                    rotacaoRR(&(*raiz));
-                } else {
-                    rotacaoRR(&(*raiz));
-                    rotacaoLL(&(*raiz));
-                }
-            }
-        }
-    } else {
-        insert = 0;
-    }
-    (*raiz)->altura = max(altura((*raiz)->esq, (*raiz)->valor, 1), altura((*raiz)->dir , (*raiz)->valor, 1));
-    return insert;
-}
-
-void rotacaoRR(arvore **raiz){
-    arvore *aux;
+void rotacaoRR(arvoreAVL** raiz){
+    arvoreAVL *aux;
     aux = (*raiz)->dir;
     (*raiz)->dir = aux->esq;
     aux->esq = *raiz;
     *raiz = aux;
 }
 
-void rotacaoLL(arvore **raiz){
-    arvore *aux;
+void rotacaoLL(arvoreAVL** raiz){
+    arvoreAVL *aux;
     aux = (*raiz)->esq;
     (*raiz)->esq = aux->dir;
     aux->dir = *raiz;
     *raiz = aux;
 }
 
-arvore * freeArv(arvore *raiz){
-    if(raiz != NULL){
-        freeArv(raiz->dir);
-        freeArv(raiz->esq);
-        free(raiz);
-    }
-    return NULL;
+void rotacaoLR(arvoreAVL** raiz){
+    rotacaoRR(&((*raiz)->esq));
+    rotacaoLL(raiz);
 }
 
-int altura(arvore *no, int valor, int maior){
-    int Altura = 0;
-    arvore *aux = malloc(sizeof(arvore));
-
-    aux = busca(no, valor);
-
-    int interna(arvore *no){
-        int esq = 0, dir = 0;
-
-        if(no->esq != NULL) esq += interna(no->esq) + 1;
-        if(no->dir != NULL) dir += interna(no->dir) + 1;
-
-        if(maior) return esq > dir ? esq : dir;
-        else return esq < dir ? esq : dir;
-        
-    }
-
-    if(aux != NULL) Altura = interna(aux);
-
-    return Altura;
+void rotacaoRL(arvoreAVL** raiz){
+    rotacaoLL(&((*raiz)->dir));
+    rotacaoRR(raiz);
 }
 
-arvore * busca(arvore *no, int valor){
-    arvore *aux = malloc(sizeof(arvore));
-    if(no != NULL){
-        if(no->valor != valor){
-            if(no->valor >= valor) aux = busca(no->esq, valor);
-            else aux = busca(no->dir, valor);
-        } else {
-            aux = no;
+int altura_do_no(arvoreAVL* raiz){
+    int n = 0;
+    if(raiz == NULL)
+        n = -1;
+    else
+        n = maior(altura_do_no(raiz->esq), altura_do_no(raiz->dir))+1;
+    return n;
+}
+
+int inserirAVL(arvoreAVL** raiz, arvoreAVL* NO){    
+    int inseriu = 1;
+    if(*raiz==NULL){
+        *raiz = NO;
+    }else{
+        if(NO->valor < (*raiz)->valor){
+            if(inserirAVL(&((*raiz)->esq),NO)==1){
+                if( abs(altura_do_no((*raiz)->esq) - altura_do_no((*raiz)->dir) ) == 2){
+                    if(NO->valor < ((*raiz)->esq)->valor){
+                        //printf("LL\n");
+                        rotacaoLL(raiz);
+                    }else{
+                        rotacaoLR(raiz);
+                        //printf("LR\n");
+                        
+                    }
+                }
+            }
+        }else{
+            if(NO->valor > (*raiz)->valor){
+                if( inserirAVL(&(*raiz)->dir,NO)==1){
+                    if( abs(altura_do_no((*raiz)->esq) - altura_do_no((*raiz)->dir) ) == 2){
+                        if(NO->valor > ((*raiz)->dir)->valor){
+                            //printf("RR\n");
+                            rotacaoRR(raiz);
+                        }else{
+                            //printf("RL\n");
+                            rotacaoRL(raiz);
+                        }
+                    }
+                }
+            }else
+                inseriu = 0;
         }
     }
-    return aux;
+
+    return inseriu;
 }
 
-int max(int esq, int dir){
-    int maxA;
-
-    if(esq > dir)
-        maxA = esq;
-    else
-        maxA = dir;
-    return maxA;
-
+void mostraArvore(arvoreAVL* raiz){
+    if( raiz != NULL){
+        mostraArvore(raiz->esq);
+        printf("%d %d\n",raiz->valor, altura_do_no(raiz));
+        mostraArvore(raiz->dir);
+    }
 }
 
+int buscarvalor(arvoreAVL* raiz, int valor){
+    int find = -1;
+
+    if(raiz != NULL){
+        if(raiz->valor == valor)
+            find = valor;
+        else if(raiz->valor > valor)
+            find = buscarvalor(raiz->esq, valor);
+        else
+            find = buscarvalor(raiz->dir, valor);
+    }
+    return find;
+}
+
+int maior_folha(arvoreAVL* raiz){
+    int maxD = 0, maxE = 0,depth = -1;
+
+    if(raiz != NULL){
+        maxE = maior_folha(raiz->esq)+1;
+        maxD = maior_folha(raiz->dir)+1;
+
+        if(maxD > maxE) 
+            depth = maxD;
+        else
+            depth = maxE;
+    }
+    return depth;
+}
+
+int menor_folha(arvoreAVL* raiz){
+    int maxD = 0, maxE = 0,depth = -1;
+
+    if(raiz != NULL){
+        maxE = maior_folha(raiz->esq)+1;
+        maxD = maior_folha(raiz->dir)+1;
+
+        if(maxD < maxE) 
+            depth = maxD;
+        else
+            depth = maxE;
+    }
+    return depth;
+}
+
+
+int* numeroaleatorio(int qtd){
+    int* vetor = (int*) malloc(qtd*sizeof(int));
+    for(int x = 0; x<qtd; x++)
+        vetor[x] = rand()%tam;
+    return vetor;
+}
