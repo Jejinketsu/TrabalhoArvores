@@ -23,7 +23,6 @@ typedef struct text{
 void addArv(arvore **raiz, arvore *new);
 void showArv(arvore *raiz);
 arvore * busca(arvore *no, char *string);
-void remover(arvore **raiz, char *string);
 void deleteNode(arvore **raiz, char *string);
 arvore * freeArv(arvore *raiz);
 void showList(text *lista);

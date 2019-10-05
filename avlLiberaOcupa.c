@@ -1,297 +1,279 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#define tam 10000
-#define repeat 30
 
-typedef struct arv arvoreAVL;
+typedef struct arv arvAVL;
+
+arvAVL* criarArv();
+arvAVL* criarFolha(int *status, int nInicio, int nFinal,int endInicio, int endFim);
+int ehFolha(arvAVL *no);
+int maiorNum(int a, int b);
+void showArv(arvAVL* raiz);
+int altarvAVL(arvAVL* raiz);
+void rotacaoRR(arvAVL** raiz);
+int inverterStatus(int status);
+void inserirAVL(arvAVL** raiz, arvAVL* no);
+int alocar(arvAVL** raiz, arvAVL** pai, int qtdBlocos, int *status);
+int liberar(arvAVL** raiz, arvAVL** pai, int qtdBlocos, int* status);
+int BuscaLivre(arvAVL* raiz, int Valor);
+int BuscaOcupado(arvAVL* raiz, int Valor);
 
 struct arv{
-    arvoreAVL *dir ,*esq;
-    int enderecoInicio, enderecoFim;
     char status;
+    int nInicio, nFinal;
+    int endInicio, endFim;
+    arvAVL *esq, *dir;
 };
 
-arvoreAVL* nova_arvore();
-int ehFolha(arvoreAVL *no);
-arvoreAVL* criarFolha(int *status, int enderecoInicio, int enderecoFim);
-int alocar(arvoreAVL** raiz, arvoreAVL** pai, int qtdBlocos, int *status, int fim);
-int liberar(arvoreAVL** raiz, arvoreAVL** pai, int qtdBlocos, int* status, int fim);
-int maior(int a, int b);
-int inverterStatus(int status);
-void rotacaoRR(arvoreAVL** raiz);
-int altura_do_no(arvoreAVL* raiz);
-int inserirAVL(arvoreAVL** raiz, arvoreAVL* NO, int fim);
-int buscaEspaco(arvoreAVL *raiz, int espaco);
-void concatenaNo(arvoreAVL **raiz);
-void mostraArvore(arvoreAVL* raiz);
+int main(){
 
-#define TESTES 30
+	arvAVL* raiz = criarArv();
+	int  status = 0, op = 1;
 
-void main(){
-    arvoreAVL *raiz = NULL;
-    int fim, status = 0, menuOpc = 1;
+	clock_t tempoBuscaI, tempoBuscaF;
+	clock_t tempoAlterarI, tempoAlterarF;
+	float tempoBuscaDecorrido, tempoAlterarDecorrido;
 
-    while(menuOpc != 0){
-        printf("1. Criar árvore\n2. Mostrar Arvore\n3. Alocar no\n4. Liberar no\n0.sair\nin: ");
-        scanf("%d", &menuOpc);
+	while(op != 0){
+		printf("1. Criar Arvore\n2. Mostrar Arvore\n3. Alocar Blocos\n4. Liberar Blocos\n0. Sair\n");
+		scanf("%d", &op);
 
-        switch (menuOpc){
-            case 1:
-                printf("Qual a quantidade de blocos em MB? ");
-                scanf("%d", &fim);
-                printf("O primeiro bloco é livre ou coupado? (1. Livre/0. Ocupado): ");
-                scanf("%d", &status);
+		switch(op){
+			case 1: {
 
-                int auxInicio = 0, auxFim = 0;
-                while(auxFim <= fim){
-                    printf("Digite o inicio e fim do bloco: ");
-                    scanf("%d %d", &auxInicio, &auxFim);
-                    inserirAVL(&raiz, criarFolha(&status, auxInicio, auxFim), fim);
-                    status = inverterStatus(status);
-                    if(fim == auxFim) break;
-                }
-                break;
-        
-            case 2:
-                mostraArvore(raiz);
-                break;
+				free(raiz);
+				raiz = NULL;
 
-            case 3:
-                printf("Digite a quantidade de blocos para alocar: ");
+				printf("O status do primeiro bloco eh 1-Ocupado ou 0-Livre: \n");
+				scanf("%d", &status);
+
+				int Inicio, Fim;
+				printf("Insira o endereço incial e final: ");
+				scanf("%d %d", &Inicio, &Fim);
+
+				int auxInicio=0, auxFim=0, cont=0;
+
+				while(auxFim < Fim){
+					printf("Insira o endereço incial e final do %d\xa7 elemento: ", cont++);
+					scanf("%d %d", &auxInicio, &auxFim);
+					inserirAVL(&raiz, criarFolha(&status, Inicio, Fim, auxInicio, auxFim));
+				}
+				break;
+			}
+
+			case 2:
+				showArv(raiz);
+				printf("------------\n");
+				break;
+
+			case 3: {
+			
 				int auxalocar;
+				printf("Quantidade de blocos para Alocar: ");
 				scanf("%d", &auxalocar);
-                int procuraAloc = buscaEspaco(raiz, auxalocar);
-                if( alocar(&raiz,NULL, auxalocar, &status, fim) == 0)
-					printf("Espaço insuficiente.\n");
-				else
-					printf("Alocação %d bem sucedida.\n", procuraAloc);
-                break;
 
-            case 4:
-                printf("Digite a quantidade de blocos para liberar: ");
+
+				tempoBuscaI = clock();
+				int encontradoAloc = BuscaLivre(raiz, auxalocar);
+				tempoBuscaF = clock();
+				tempoBuscaDecorrido = ((tempoBuscaF- tempoBuscaI)*1000)/CLOCKS_PER_SEC;
+				printf("Tempo gasto BUSCAR: %lf \n", tempoBuscaDecorrido);
+
+				
+				tempoAlterarI = clock();
+				if( alocar(&raiz,NULL, auxalocar, &status) == 0)
+					printf("Espaço insuficiente [%d].\n", encontradoAloc);
+				else
+					printf("Alocação bem sucedida [%d].\n", encontradoAloc);
+				
+				tempoAlterarF = clock();
+				tempoAlterarDecorrido = ((tempoAlterarF-tempoAlterarI)*1000)/CLOCKS_PER_SEC;
+				printf("Tempo gasto ALTERAR: %lf \n", tempoBuscaDecorrido);
+
+				break;
+			}
+
+			case 4: {
+
 				int auxliberar;
+				printf("Quantidade de blocos para liberar: ");
 				scanf("%d", &auxliberar);
-                int procuraLib = buscaEspaco(raiz, auxliberar);
-                if( liberar(&raiz,NULL, auxliberar, &status, fim) == 0)
-					printf("Espaço %d insuficiente.\n", procuraLib);
+
+				tempoBuscaI = clock();
+				
+				int encontradoLib = BuscaOcupado(raiz, auxliberar);
+
+				tempoBuscaF = clock();
+				tempoBuscaDecorrido = ((tempoBuscaF- tempoBuscaI)*1000)/CLOCKS_PER_SEC;
+				printf("Tempo gasto BUSCAR: %lf \n", tempoBuscaDecorrido);
+				
+
+				tempoAlterarI = clock();
+				if( liberar(&raiz,NULL, auxliberar, &status) == 0)
+					printf("Espaço insuficiente [%d].\n", encontradoLib);
 				else
-					printf("Liberação %d bem sucedida.\n", procuraLib);
-                break;
-
-            default:
-                break;
-        }
-    }
-}
-
-arvoreAVL * nova_arvore(){
-    return NULL;
-}
-
-int ehFolha(arvoreAVL *no){
-    return (no->dir == NULL && no->esq == NULL) ? 1 : 0;
-}
-
-arvoreAVL * criarFolha(int *status, int enderecoInicio, int enderecoFim){
-    arvoreAVL* novoNo = (arvoreAVL*) malloc(sizeof(arvoreAVL));
-    novoNo->esq = NULL;
-    novoNo->dir = NULL;
-    novoNo->enderecoInicio = enderecoInicio;
-    novoNo->enderecoFim = enderecoFim;
-
-    if(*status == 0) novoNo->status = 'O';
-    else novoNo->status = 'L';
-
-    return novoNo;
-}
-
-int maior(int a, int b){
-    return a>b ? a : b;
+					printf("Liberação bem sucedida [%d].\n", encontradoLib);
+				
+				tempoAlterarF = clock();
+				tempoAlterarDecorrido = ((tempoAlterarF-tempoAlterarI)*1000)/CLOCKS_PER_SEC;
+				printf("Tempo gasto ALTERAR: %lf \n", tempoBuscaDecorrido);
+				break;
+			}
+			default:
+				break;
+		}
+	}
+    return 0;
 }
 
 int inverterStatus(int status){
-    return status == 1 ? 0 : 1;
+	return status == 1 ? 0 : 1;
 }
 
-void rotacaoRR(arvoreAVL** raiz){
-    arvoreAVL *aux;
-    aux = (*raiz)->dir;
-    (*raiz)->dir = aux->esq;
-    aux->esq = *raiz;
-    *raiz = aux;
+
+arvAVL* criarArv(){
+	return NULL;
 }
 
-int altura_do_no(arvoreAVL* raiz){
-    int n = 0;
-    if(raiz == NULL)
-        n = -1;
-    else
-        n = maior(altura_do_no(raiz->esq), altura_do_no(raiz->dir))+1;
-    return n;
+arvAVL* criarFolha(int *status, int nInicio, int nFinal,int endInicio, int endFim){
+	arvAVL* novoNo = (arvAVL*) malloc(sizeof(arvAVL));
+	novoNo->esq = NULL;
+	novoNo->dir = NULL;
+	novoNo->nInicio = nInicio;
+	novoNo->nFinal = nFinal;
+	novoNo->endInicio = endInicio;
+	novoNo->endFim = endFim;
+
+	if(*status == 0) novoNo->status = 'L';
+	else novoNo->status = 'O';
+
+	*status = inverterStatus(*status);
+	return novoNo;
 }
 
-int inserirAVL(arvoreAVL** raiz, arvoreAVL* NO, int fim){    
-    int inseriu = 1;
-    if(*raiz==NULL){
-        *raiz = NO;
-    }else{
-        if(fim >= NO->enderecoInicio){
-            if(NO->enderecoInicio > (*raiz)->enderecoFim){
-                inserirAVL(&(*raiz)->dir, NO, fim);
-
-                if(abs(altura_do_no((*raiz)->esq) - altura_do_no((*raiz)->dir)) == 2)
-                    rotacaoRR(raiz);
-            }
-        }else{
-            inseriu = 0;
-        }
-    }
-
-    return inseriu;
+int ehFolha(arvAVL *no){
+	return no->dir == NULL && no->esq == NULL ? 1 : 0;
 }
 
-int alocar(arvoreAVL** raiz, arvoreAVL** pai, int qtdBlocos, int *status, int fim){
+int maiorNum(int a, int b){
+	return a > b ? a : b;
+}
+
+void showArv(arvAVL* raiz){
+	if(raiz != NULL){
+		showArv(raiz->esq);
+		printf("%c | %d-%d | %d-%d\n",raiz->status, raiz->nInicio, raiz->nFinal, raiz->endInicio, raiz->endFim);
+		showArv(raiz->dir);
+	}
+}
+
+int altarvAVL(arvAVL* raiz){
+	int n = 0;
+
+	if(raiz == NULL)n = -1;
+	else n = maiorNum(altarvAVL(raiz->esq), altarvAVL(raiz->dir))+1;
+
+	return n;
+}
+
+void rotacaoRR(arvAVL** raiz){
+	arvAVL *aux;
+	aux = (*raiz)->dir;
+	(*raiz)->dir = aux->esq;
+	aux->esq = *raiz;
+	*raiz = aux;
+}
+
+void inserirAVL(arvAVL** raiz, arvAVL* no){
+	if(*raiz==NULL){
+		*raiz = no;
+	}else{
+		if( (*raiz)->nFinal >= no->endInicio){
+			if(no->endInicio > (*raiz)->endFim){
+				inserirAVL(&(*raiz)->dir, no);
+				if(abs(altarvAVL((*raiz)->esq) - altarvAVL((*raiz)->dir)) == 2)
+					rotacaoRR(raiz);
+			}
+		}
+	}
+}
+
+int alocar(arvAVL** raiz, arvAVL** pai, int qtdBlocos, int *status){
+
 	int resul = 0;
-	if(*raiz != NULL){
-		resul = alocar(&(*raiz)->esq,raiz, qtdBlocos, status, fim);
+
+	if( *raiz != NULL){
+		resul = alocar(&(*raiz)->esq,raiz, qtdBlocos, status);
+
 		if(resul == 0){
+			
 			if((*raiz)->status == 'L'){
-				int qtdLocal = (*raiz)->enderecoFim - (*raiz)->enderecoInicio + 1;
-				if(pai == NULL && ehFolha((*raiz))){
+				int qtdLocal = (*raiz)->endFim - (*raiz)->endInicio + 1;
+				
+				if(pai == NULL && (*raiz)->esq == NULL && (*raiz)->dir == NULL){
+					
 					if(qtdLocal == qtdBlocos){
 						(*raiz)->status = 'O';
-                        *status = inverterStatus(*status);
 					}else{
-						int newfim = (*raiz)->enderecoFim - qtdBlocos;
-						int auxfim = (*raiz)->enderecoFim;
-						(*raiz)->enderecoFim = newfim;
-						int newinicio = newfim+1;
-						inserirAVL(raiz, criarFolha(status, newinicio,auxfim), fim);
+						int newFim = (*raiz)->endFim - qtdBlocos;
+						int auxFim = (*raiz)->endFim;
+						(*raiz)->endFim = newFim;
+
+						int newInicio = newFim+1;
+
+						inserirAVL(raiz, criarFolha(status, (*raiz)->nInicio, (*raiz)->nFinal, newInicio, auxFim));
+
 					}
 					resul = 1;
-				}else if(ehFolha(*raiz)){
+				}else if((*raiz)->esq == NULL && (*raiz)->dir == NULL){
 					if(qtdLocal == qtdBlocos){
-						int newfim = (*pai)->enderecoFim + qtdBlocos;
-						(*pai)->enderecoFim = newfim;
+
+						int newFim = (*pai)->endFim + qtdBlocos;
+						(*pai)->endFim = newFim;
 						free(*raiz);
 						*raiz = NULL;
 						resul = 1;
+
 					}else if(qtdLocal > qtdBlocos){
 						if((*pai)->esq == *raiz){
-							int newfim = (*raiz)->enderecoFim - qtdBlocos;
-							int newinicio = (*pai)->enderecoInicio - qtdBlocos;
-							(*raiz)->enderecoFim = newfim;
-							(*pai)->enderecoInicio = newinicio;
+							int newFim = (*raiz)->endFim - qtdBlocos;
+							int newInicio = (*pai)->endInicio - qtdBlocos;
+							(*raiz)->endFim = newFim;
+							(*pai)->endInicio = newInicio;
 						}else{
-							int newinicio = (*raiz)->enderecoInicio + qtdBlocos;
-							int newfim = (*pai)->enderecoFim + qtdBlocos;
-							(*raiz)->enderecoInicio = newinicio;
-							(*pai)->enderecoFim = newfim;
+							int newInicio = (*raiz)->endInicio + qtdBlocos;
+							int newFim = (*pai)->endFim + qtdBlocos;
+							(*raiz)->endInicio = newInicio;
+							(*pai)->endFim = newFim;
 						}
 						resul = 1;
 					}
 				}else{
-					arvoreAVL** paiMaisEsq = raiz;
-					arvoreAVL** maisEsq = &((*raiz)->dir);
+			
+					arvAVL** paiMaisEsq = raiz;
+					arvAVL** maisEsq;
+					if((*raiz)->dir == NULL){
+						maisEsq = raiz;
+					}else{
+						maisEsq = &((*raiz)->dir);
+					}
 					while((*maisEsq)->esq != NULL){
 						paiMaisEsq = maisEsq;
 						maisEsq = &((*maisEsq)->esq) ;
 					}
 					if((*paiMaisEsq)->status == 'O'){
 						maisEsq = paiMaisEsq;
-					}		
-					if(qtdLocal == qtdBlocos){
-						arvoreAVL** paiMaisDir = raiz;
-						arvoreAVL** maisDir = &((*raiz)->esq);
-						while((*maisDir)->dir != NULL){
-							paiMaisDir = maisDir;
-							maisDir = &((*maisDir)->dir) ;
-						}
-						if((*paiMaisDir)->status == 'O'){
-							maisDir = paiMaisDir;
-						}
-						int newinicio = (*maisDir)->enderecoInicio;
-						int newfim = (*maisEsq)->enderecoFim;
-						(*raiz)->enderecoInicio = newinicio;
-						(*raiz)->enderecoFim = newfim;
-						(*raiz)->status = 'O';
-						free(*maisDir);
-						free(*maisEsq);
-						*maisDir = NULL;
-						*maisEsq = NULL;	
-						resul = 1;
-					}else if(qtdLocal > qtdBlocos){
-						int newfim = (*raiz)->enderecoFim - qtdBlocos;
-						int newinicio = (*maisEsq)->enderecoInicio - qtdBlocos;
-						(*raiz)->enderecoFim = newfim;
-						(*maisEsq)->enderecoInicio = newinicio;
-						resul = 1;					
-					}else{
-						resul = alocar(&(*raiz)->dir,raiz, qtdBlocos, status, fim);
 					}	
-				}
-			}else{
-				resul = alocar(&(*raiz)->dir,raiz, qtdBlocos, status, fim);
-			}
-		}
-	}
-	return resul;
-}
 
-int liberar(arvoreAVL** raiz, arvoreAVL** pai, int qtdBlocos, int* status, int fim){
-	int resul = 0;
-	if( *raiz != NULL){
-		resul = liberar(&(*raiz)->esq,raiz, qtdBlocos, status, fim);
-		if(resul == 0){
-			if((*raiz)->status == 'O'){
-				int qtdLocal = (*raiz)->enderecoFim - (*raiz)->enderecoInicio +1;
-				if( pai == NULL && (*raiz)->esq == NULL && (*raiz)->dir == NULL){
 					if(qtdLocal == qtdBlocos){
-						(*raiz)->status = 'L';
-						*status = 1 - (*status);
-					}else{
-						int newfim = (*raiz)->enderecoFim - qtdBlocos;
-						int auxfim = (*raiz)->enderecoFim;
-						(*raiz)->enderecoFim = newfim;
-						int newinicio = newfim+1;
-						inserirAVL(raiz, criarFolha(status, newinicio,auxfim), fim);
-					}
-					resul = 1;
-				}else if((*raiz)->dir == NULL){
-					if(qtdLocal == qtdBlocos){
-						int newfim = (*pai)->enderecoFim + qtdBlocos;
-						(*pai)->enderecoFim = newfim;
-						free(*raiz);
-						*raiz = NULL;
-						resul = 1;
-					}else if(qtdLocal > qtdBlocos){
-						if((*pai)->esq == *raiz){
-							int newfim = (*raiz)->enderecoFim - qtdBlocos;
-							int newinicio = (*pai)->enderecoInicio - qtdBlocos;
-							(*raiz)->enderecoFim = newfim;
-							(*pai)->enderecoInicio = newinicio;
+
+						arvAVL** paiMaisDir = raiz;
+						arvAVL** maisDir;;
+						if((*raiz)->esq == NULL ){
+							maisDir = raiz;
 						}else{
-							int newinicio = (*raiz)->enderecoInicio + qtdBlocos;
-							int newfim = (*pai)->enderecoFim + qtdBlocos;
-							(*raiz)->enderecoInicio = newinicio;
-							(*pai)->enderecoFim = newfim;
+							maisDir = &((*raiz)->esq);	
 						}
-						resul = 1;
-					}
-				}else{
-					arvoreAVL** paiMaisEsq = raiz;
-					arvoreAVL** maisEsq = &((*raiz)->dir);
-					while((*maisEsq)->esq != NULL){
-						paiMaisEsq = maisEsq;
-						maisEsq = &((*maisEsq)->esq) ;
-					}
-					if((*paiMaisEsq)->status == 'L'){
-						maisEsq = paiMaisEsq;
-					}
-					if(qtdLocal == qtdBlocos){
-						arvoreAVL** paiMaisDir = raiz;
-						arvoreAVL** maisDir = &((*raiz)->esq);
 						while((*maisDir)->dir != NULL){
 							paiMaisDir = maisDir;
 							maisDir = &((*maisDir)->dir) ;
@@ -299,63 +281,211 @@ int liberar(arvoreAVL** raiz, arvoreAVL** pai, int qtdBlocos, int* status, int f
 						if((*paiMaisDir)->status == 'L'){
 							maisDir = paiMaisDir;
 						}
-						int newinicio = (*maisDir)->enderecoInicio;
-						int newfim = (*maisEsq)->enderecoFim;
-						(*raiz)->enderecoInicio = newinicio;
-						(*raiz)->enderecoFim = newfim;
-						(*raiz)->status = 'L';
+												
+						int newInicio = (*maisDir)->endInicio;
+						int newFim = (*maisEsq)->endFim;
+						(*raiz)->endInicio = newInicio;
+						(*raiz)->endFim = newFim;
+						(*raiz)->status = 'O';
+
+						if(paiMaisEsq == raiz){
+							(*raiz)->dir = ((*maisEsq)->dir);
+						}else{
+							(*paiMaisEsq)->esq = ((*maisEsq)->dir);
+						}
+
+						if(paiMaisDir == raiz){
+							(*raiz)->esq = ((*maisDir)->esq);
+						}else {
+							(*paiMaisDir)->dir = ((*maisDir)->esq);
+						}
+						
 						free(*maisDir);
 						free(*maisEsq);
 						*maisDir = NULL;
 						*maisEsq = NULL;	
 						resul = 1;
 					}else if(qtdLocal > qtdBlocos){
-						int newfim = (*raiz)->enderecoFim - qtdBlocos;
-						int newinicio = (*maisEsq)->enderecoInicio - qtdBlocos;
-						(*raiz)->enderecoFim = newfim;
-						(*maisEsq)->enderecoInicio = newinicio;
+						int newFim = (*raiz)->endFim - qtdBlocos;
+						int newInicio = (*maisEsq)->endInicio - qtdBlocos;
+						(*raiz)->endFim = newFim;
+						(*maisEsq)->endInicio = newInicio;
 						resul = 1;
+						
 					}else{
-						resul = liberar(&(*raiz)->dir,raiz, qtdBlocos, status, fim);
+						resul = alocar(&(*raiz)->dir, raiz, qtdBlocos, status);
 					}	
 				}
 			}else{
-				resul = liberar(&(*raiz)->dir,raiz, qtdBlocos, status, fim);
+				resul = alocar(&(*raiz)->dir, raiz, qtdBlocos, status);
 			}
 		}
 	}
 	return resul;
 }
 
-int buscaEspaco(arvoreAVL *raiz, int espaco){
-    int flag = 0;
-    if(raiz != NULL){
-        
-        buscaEspaco(raiz->esq, espaco);
+int liberar(arvAVL** raiz, arvAVL** pai, int qtdBlocos, int* status){
 
-        if(raiz->status = 'L'){
-            if((raiz->enderecoFim - raiz->enderecoInicio) >= espaco){
-                flag = 1;
-            }
-        }
-        
-        if(!flag) buscaEspaco(raiz->dir, espaco);   
-    }
-    return flag;
+	int resul = 0;
+
+	if( *raiz != NULL){
+		resul = liberar(&(*raiz)->esq, raiz, qtdBlocos, status);
+	
+		if(resul == 0){
+				
+			if((*raiz)->status == 'O'){
+				int qtdLocal = (*raiz)->endFim - (*raiz)->endInicio + 1;
+				
+				if(pai == NULL && ehFolha(*raiz)){
+					
+					if(qtdLocal == qtdBlocos){
+						(*raiz)->status = 'L';
+					}else{
+						int newFim = (*raiz)->endFim - qtdBlocos;
+						int auxFim = (*raiz)->endFim;
+						(*raiz)->endFim = newFim;
+
+						int newInicio = newFim+1;
+
+						inserirAVL(raiz, criarFolha(status, (*raiz)->nInicio,(*raiz)->nFinal,newInicio,auxFim));
+
+					}
+					resul = 1;
+				}else if((*raiz)->dir == NULL){
+					if(qtdLocal == qtdBlocos){
+						//Buscar os mais interarvAVLs para unir;
+						int newFim = (*pai)->endFim + qtdBlocos;
+						(*pai)->endFim = newFim;
+						free(*raiz);
+						*raiz = NULL;
+						resul = 1;
+					}else if(qtdLocal > qtdBlocos){
+						if((*pai)->esq == *raiz){
+							int newFim = (*raiz)->endFim - qtdBlocos;
+							int newInicio = (*pai)->endInicio - qtdBlocos;
+							(*raiz)->endFim = newFim;
+							(*pai)->endInicio = newInicio;
+						}else{
+							int newInicio = (*raiz)->endInicio + qtdBlocos;
+							int newFim = (*pai)->endFim + qtdBlocos;
+							(*raiz)->endInicio = newInicio;
+							(*pai)->endFim = newFim;
+						}
+						resul = 1;
+					}
+				}else{
+			
+					//Buscando o mais a esquerda Ocupado.
+					arvAVL** paiMaisEsq = raiz;
+					arvAVL** maisEsq;
+					if((*raiz)->dir == NULL){
+						maisEsq = raiz;
+					}else{
+						maisEsq = &((*raiz)->dir);
+					}
+					while((*maisEsq)->esq != NULL){
+						paiMaisEsq = maisEsq;
+						maisEsq = &((*maisEsq)->esq) ;
+					}
+					if((*paiMaisEsq)->status == 'L'){
+						maisEsq = paiMaisEsq;
+					}
+					//free(*paiMaisEsq);		
+					
+					if(qtdLocal == qtdBlocos){
+
+						//Buscando o mais a direita Ocupado.
+						arvAVL** paiMaisDir = raiz;
+						arvAVL** maisDir;
+						if((*raiz)->esq == NULL ){
+							maisDir = raiz;
+						}else{
+							maisDir = &((*raiz)->esq);	
+						}
+
+						int newInicio = (*maisDir)->endInicio;
+						int newFim = (*maisEsq)->endFim;
+						(*raiz)->endInicio = newInicio;
+						(*raiz)->endFim = newFim;
+						(*raiz)->status = 'L';
+
+						while((*maisDir)->dir != NULL){
+							paiMaisDir = maisDir;
+							maisDir = &((*maisDir)->dir) ;
+						}
+						if((*paiMaisDir)->status == 'O'){
+							maisDir = paiMaisDir;
+						}
+						
+						printf("ERRO[%d][%d]\n", newInicio, newFim);
+
+						if(paiMaisEsq == raiz){
+							(*raiz)->dir = ((*maisEsq)->dir);
+						}else{
+							(*paiMaisEsq)->esq = ((*maisEsq)->dir);
+						}
+
+						if(paiMaisDir == raiz){
+							(*raiz)->esq = ((*maisDir)->esq);
+						}else {
+							(*paiMaisDir)->dir = ((*maisDir)->esq);
+						}
+
+						free(*maisDir);
+						free(*maisEsq);
+						*maisDir = NULL;
+						*maisEsq = NULL;	
+						resul = 1;
+					}else if(qtdLocal > qtdBlocos){
+						int newFim = (*raiz)->endFim - qtdBlocos;
+						int newInicio = (*maisEsq)->endInicio - qtdBlocos;
+						(*raiz)->endFim = newFim;
+						(*maisEsq)->endInicio = newInicio;
+						resul = 1;
+					}else{
+						resul = liberar(&(*raiz)->dir, raiz, qtdBlocos, status);
+					}	
+				}
+			}else{
+				resul = liberar(&(*raiz)->dir, raiz, qtdBlocos, status);
+			}
+		}
+	}
+	return resul;
 }
 
-void concatenaNo(arvoreAVL **raiz){
-    arvoreAVL * aux = (*raiz)->dir;
+int BuscaLivre(arvAVL* raiz, int Valor){
+	int encontrado = 0;
 
-    (*raiz)->enderecoFim = aux->enderecoFim;
-    (*raiz)->dir = aux->dir;
-    free(aux);
+	if(raiz != NULL){
+		encontrado = BuscaLivre(raiz->esq, Valor);
+		if((raiz)->status == 'L'){
+			int qtdLocal = (raiz)->endFim - (raiz)->endInicio + 1;
+			if(Valor <= qtdLocal){
+				encontrado = 1;
+			}
+		}
+		if(encontrado==0){
+			encontrado = BuscaLivre(raiz->dir, Valor);
+		}
+	}
+	return encontrado;
 }
 
-void mostraArvore(arvoreAVL* raiz){
-    if( raiz != NULL){
-        mostraArvore(raiz->esq);
-        printf("status: %c ! inicio: %d ! fim: %d\n",raiz->status, raiz->enderecoInicio, raiz->enderecoFim);
-        mostraArvore(raiz->dir);
-    }
+int BuscaOcupado(arvAVL* raiz, int Valor){
+	int encontrado = 0;
+
+	if(raiz != NULL){
+		encontrado = BuscaOcupado(raiz->esq, Valor);
+		if((raiz)->status == 'L'){
+			int qtdLocal = (raiz)->endFim - (raiz)->endInicio +1;
+			if(Valor <= qtdLocal){
+				encontrado = 1;
+			}
+		}
+		if(encontrado==0){
+			encontrado = BuscaOcupado(raiz->dir, Valor);
+		}
+	}
+	return encontrado;
 }
